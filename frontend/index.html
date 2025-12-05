@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Clearoid</title>
+
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			max-width: 600px;
+			margin: 50px auto;
+			padding: 20px;
+			background-color: #f7f7f7;
+
+			/* Added dotted background pattern */
+			background-image: radial-gradient(#ddd 1px, transparent 1px);
+			background-size: 20px 20px;
+
+			border-radius: 10px;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		}
+
+		h1 {
+			text-align: center;
+			color: #333;
+		}
+
+		input,
+		button {
+			padding: 10px;
+			margin: 5px 0;
+			width: 100%;
+			border-radius: 5px;
+			border: 1px solid #ccc;
+			font-size: 16px;
+		}
+
+		button {
+			background: #4CAF50;
+			color: white;
+			cursor: pointer;
+			border: none;
+		}
+
+		button:hover {
+			background: #45a049;
+		}
+
+		.message {
+			margin-top: 10px;
+			padding: 10px;
+			border-radius: 5px;
+			display: none;
+		}
+
+		.success {
+			background-color: #d4edda;
+			color: #155724;
+		}
+
+		.error {
+			background-color: #f8d7da;
+			color: #721c24;
+		}
+
+		.duplicate {
+			background-color: #fff3cd;
+			color: #856404;
+		}
+	</style>
+
+</head>
+
+<body>
+
+	<h1>Clearoid</h1>
+
+	<label for="titleInput">Enter a Title:</label>
+	<input type="text" id="titleInput" placeholder="Type your title here">
+
+	<button id="submitBtn">Submit Title</button>
+	<button id="checkBtn">Check Duplicate</button>
+
+	<div id="response" class="message"></div>
+
+	<script>
+		const submitBtn = document.getElementById("submitBtn");
+		const checkBtn = document.getElementById("checkBtn");
+		const responseDiv = document.getElementById("response");
+
+		const API_URL = "http://127.0.0.1:8000";
+
+		function showMessage(msg, type) {
+			responseDiv.textContent = msg;
+			responseDiv.className = `message ${type}`;
+			responseDiv.style.display = "block";
+			setTimeout(() => { responseDiv.style.display = "none"; }, 5000);
+		}
+
+		submitBtn.addEventListener("click", async () => {
+			const title = document.getElementById("titleInput").value.trim();
+			if (!title) { showMessage("Please enter a title.", "error"); return; }
+
+			try {
+				const res = await fetch(`${API_URL}/submit`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ title })
+				});
+				const data = await res.json();
+
+				if (res.ok) showMessage(`Title stored successfully! ID: ${data.id}`, "success");
+				else showMessage(`Error: ${data.detail || "Unknown error"}`, "error");
+
+			} catch (err) {
+				showMessage(`Error: ${err}`, "error");
+			}
+		});
+
+		checkBtn.addEventListener("click", async () => {
+			const title = document.getElementById("titleInput").value.trim();
+			if (!title) { showMessage("Please enter a title to check.", "error"); return; }
+
+			try {
+				const res = await fetch(`${API_URL}/check-duplicate`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ title })
+				});
+				const data = await res.json();
+
+				if (res.ok) {
+					if (data.duplicate) {
+						showMessage(`Duplicate found! ID: ${data.id}, Title: ${data.title}`, "duplicate");
+					} else {
+						showMessage("No duplicate found.", "success");
+					}
+				} else {
+					showMessage(`Error: ${data.detail || "Unknown error"}`, "error");
+				}
+			} catch (err) {
+				showMessage(`Error: ${err}`, "error");
+			}
+		});
+	</script>
+
+</body>
+
+</html>
