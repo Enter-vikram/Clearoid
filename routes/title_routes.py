@@ -1,48 +1,63 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+import pandas as pd
+from io import BytesIO
 
-from database.database import get_db, Title
+from database.database import get_db
+from schemas.title_schema import TitleCreate
+from services.title_service import (
+    save_title,
+    check_duplicate,
+    find_similar_titles,
+    count_duplicates,
+    cluster_titles,
+    process_bulk_titles
+)
+
 
 router = APIRouter()
 
-# Pydantic model for request body
-class TitleItem(BaseModel):
-    title: str
 
-# -------------------------------
-# GET route to check server
-# -------------------------------
-@router.get("/")
-def root():
-    return {"message": "Clearoid backend is running!"}
+# ------------------------------
+# Submit a title
+# ------------------------------
+@router.post("/submit")
+def submit(item: TitleCreate, db: Session = Depends(get_db)):
+    return save_title(db, item)
 
-# -------------------------------
-# POST /submit route
-# -------------------------------
-@router.post("/submit")   # <-- THIS IS THE POST ROUTE
-def submit_title(item: TitleItem, db: Session = Depends(get_db)):
-    # Normalize title
-    normalized = item.title.lower().strip()
 
-    # Create a Title object
-    new_title = Title(title=item.title, normalized_title=normalized)
-
-    # Add to DB
-    db.add(new_title)
-    db.commit()
-    db.refresh(new_title)
-
-    return {"message": "Title stored successfully", "id": new_title.id}
-
+# ------------------------------
+# Check duplicate (best match)
+# ------------------------------
 @router.post("/check-duplicate")
-def check_duplicate(item: TitleItem, db: Session = Depends(get_db)):
-    normalized = item.title.lower().strip()
-    
-    # Check if the normalized title exists
-    existing = db.query(Title).filter(Title.normalized_title == normalized).first()
-    
-    if existing:
-        return {"duplicate": True, "id": existing.id, "title": existing.title}
-    else:
-        return {"duplicate": False}
+def duplicate(item: TitleCreate, db: Session = Depends(get_db)):
+    return check_duplicate(db, item)
+
+
+# ------------------------------
+# Find similar titles
+# ------------------------------
+@router.post("/similar-titles")
+def similar_titles(item: TitleCreate, db: Session = Depends(get_db)):
+    return {
+        "results": find_similar_titles(db, item)
+    }
+
+
+# ------------------------------
+# Count total duplicates stored
+# ------------------------------
+@router.get("/duplicate-count")
+def duplicate_count(db: Session = Depends(get_db)):
+    return {
+        "duplicate_count": count_duplicates(db)
+    }
+
+
+# ------------------------------
+# Cluster titles (semantic grouping)
+# ------------------------------
+@router.get("/clusters")
+def clusters(db: Session = Depends(get_db), k: int = 5):
+    return cluster_titles(db, k)
+

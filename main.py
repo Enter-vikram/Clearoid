@@ -1,25 +1,39 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes.title_routes import router
 from fastapi.staticfiles import StaticFiles
 
+# --- Database setup ---
+from database.database import Base, engine
+
+# Import models so SQLAlchemy registers them
+import models.title  
+
+# Create tables BEFORE routers touch anything
+Base.metadata.create_all(bind=engine)
+
+# --- Routers ---
+from routes.title_routes import router as title_router
+from routes.excel_routes import router as excel_router
+
+# --- App ---
 app = FastAPI(
     title="Clearoid",
     description="AI-Assisted Form Title Normalization and Duplicate Detection System",
-    version="1.0.0"
+    version="1.0.0",
 )
 
-# Allow CORS for frontend requests
+# --- CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Or restrict to "http://127.0.0.1:8000" later
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include all routes
-app.include_router(router)
+# --- API routes ---
+app.include_router(title_router, prefix="/titles")
+app.include_router(excel_router, prefix="/excel")
 
-# Serve frontend files
+# --- Frontend ---
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
