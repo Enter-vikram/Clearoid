@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>Clusters — Clearoid</title>
+
+	<link rel="stylesheet" href="/styles.css">
+
+	<!-- Graph library -->
+	<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+
+<body>
+
+	<div class="container">
+
+		<h2>Duplicate Clusters</h2>
+
+		<div class="controls">
+			<span class="badge">Total: <b id="statTotal">0</b></span>
+			<span class="badge">Duplicates: <b id="statDup">0</b></span>
+			<span class="badge">Clusters: <b id="statClusters">0</b></span>
+		</div>
+
+		<div id="network" style="height:550px; border:1px solid #ddd; border-radius:6px;"></div>
+
+	</div>
+
+	<!-- View modal -->
+	<div id="viewModal" class="modal-overlay">
+		<div class="modal-box">
+			<h3>Cluster Detail</h3>
+			<pre id="viewContent"></pre>
+
+			<div style="margin-top:10px; text-align:right;">
+				<button class="btn-neutral" onclick="closeView()">Close</button>
+			</div>
+		</div>
+	</div>
+
+
+	<script>
+		const API = "/titles";
+
+		function loadStats() {
+			fetch("/admin/stats")
+				.then(r => r.json())
+				.then(s => {
+					document.getElementById("statTotal").innerText = s.total || 0;
+					document.getElementById("statDup").innerText = s.duplicates || 0;
+					document.getElementById("statClusters").innerText = s.groups || 0;
+				});
+		}
+
+		function loadClusters() {
+			fetch(API + "/clusters")
+				.then(r => r.json())
+				.then(groups => {
+					if (!groups.length) {
+						document.getElementById("network").innerHTML =
+							"<p style='text-align:center; padding:40px;'>No clusters found.</p>";
+						return;
+					}
+					buildGraph(groups);
+				});
+		}
+
+		function buildGraph(groups) {
+			let nodes = [];
+			let edges = [];
+			let colors = ["#2563eb", "#16a34a", "#dc2626", "#d97706", "#7c3aed"];
+
+			let id = 1;
+
+			groups.forEach((g, idx) => {
+				const color = colors[idx % colors.length];
+
+				g.titles.forEach(t => {
+					nodes.push({
+						id: id,
+						label: t.title,
+						group: g.group,
+						color: color
+					});
+					t._node = id;
+					id++;
+				});
+
+				for (let i = 0; i < g.titles.length; i++) {
+					for (let j = i + 1; j < g.titles.length; j++) {
+						edges.push({
+							from: g.titles[i]._node,
+							to: g.titles[j]._node
+						});
+					}
+				}
+			});
+
+			const container = document.getElementById("network");
+
+			const data = {
+				nodes: new vis.DataSet(nodes),
+				edges: new vis.DataSet(edges)
+			};
+
+			const options = {
+				physics: { stabilization: false }
+			};
+
+			const network = new vis.Network(container, data, options);
+
+			network.on("click", params => {
+				if (params.nodes.length === 1) {
+					const node = nodes.find(n => n.id === params.nodes[0]);
+					viewCluster(node.group);
+				}
+			});
+		}
+
+		function viewCluster(id) {
+			fetch(API + "/group/" + id)
+				.then(r => r.json())
+				.then(j => {
+					document.getElementById("viewContent").innerText =
+						JSON.stringify(j, null, 2);
+					document.getElementById("viewModal").style.display = "flex";
+				});
+		}
+
+		function closeView() {
+			document.getElementById("viewModal").style.display = "none";
+		}
+
+		loadStats();
+		loadClusters();
+	</script>
+
+</body>
+
+</html>

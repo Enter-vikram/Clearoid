@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Clearoid — History</title>
+
+	<!-- ✅ External stylesheet only -->
+	<link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+
+	<div class="card">
+
+		<div class="controls">
+			<input id="search" placeholder="Search titles..." />
+
+			<select id="sort">
+				<option value="newest">Newest</option>
+				<option value="oldest">Oldest</option>
+				<option value="dup">Duplicates first</option>
+				<option value="nondup">Non-duplicates first</option>
+			</select>
+
+			<select id="filterDup">
+				<option value="">All</option>
+				<option value="true">Duplicates</option>
+				<option value="false">Non-duplicates</option>
+			</select>
+
+			<div class="bulk-controls">
+				<button id="bulkDeleteBtn">Bulk Delete</button>
+				<button id="selectAllBtn">Select All</button>
+				<button id="clearSelectionBtn">Clear</button>
+			</div>
+
+			<div class="infinite-toggle">
+				<label class="small">Infinite scroll</label>
+				<input id="infiniteToggle" type="checkbox" />
+			</div>
+		</div>
+
+		<div id="loading">Loading…</div>
+
+		<table>
+			<thead>
+				<tr>
+					<th><input id="masterCheckbox" type="checkbox" /></th>
+					<th>ID</th>
+					<th>Title</th>
+					<th>Normalized</th>
+					<th>Duplicate</th>
+					<th>Created</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody id="tbody"></tbody>
+		</table>
+
+		<div id="pagination" class="pagination"></div>
+
+	</div>
+
+	<!-- VIEW MODAL -->
+	<div id="viewModal" class="modalfade">
+		<div class="modal">
+			<h3>Title detail</h3>
+			<div id="viewContent"></div>
+			<div class="modal-actions">
+				<button onclick="closeView()">Close</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- EDIT MODAL -->
+	<div id="editModal" class="modalfade">
+		<div class="modal">
+			<h3>Edit title</h3>
+
+			<label>Title</label>
+			<input id="editTitle" />
+
+			<label>Normalized</label>
+			<input id="editNormalized" />
+
+			<label>Duplicate flag (0/1)</label>
+			<input id="editDup" />
+
+			<div class="modal-actions">
+				<button onclick="saveEdit()">Save</button>
+				<button onclick="closeEdit()">Cancel</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- ✅ JS remains unchanged -->
+	<script>
+		const API = "/titles/";
+
+		let page = 1;
+		const limit = 20;
+
+		let loading = false;
+		let search = "";
+		let sort = "newest";
+		let duplicateFilter = "";
+		let infinite = false;
+
+		let selected = new Set();
+
+		const tbody = document.getElementById("tbody");
+		const loadingEl = document.getElementById("loading");
+
+		const searchEl = document.getElementById("search");
+		const sortEl = document.getElementById("sort");
+		const filterEl = document.getElementById("filterDup");
+
+		const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+		const selectAllBtn = document.getElementById("selectAllBtn");
+		const clearSelectionBtn = document.getElementById("clearSelectionBtn");
+		const infiniteToggle = document.getElementById("infiniteToggle");
+
+		function buildUrl() {
+			let url = `${API}?page=${page}&limit=${limit}`;
+
+			if (search.trim() !== "")
+				url += `&search=${encodeURIComponent(search)}`;
+
+			if (sort)
+				url += `&sort=${sort}`;
+
+			if (duplicateFilter === "true")
+				url += `&duplicates=true`;
+
+			if (duplicateFilter === "false")
+				url += `&duplicates=false`;
+
+			return url;
+		}
+
+		async function load() {
+			if (loading) return;
+
+			loading = true;
+			loadingEl.style.display = "block";
+
+			try {
+				const res = await fetch(buildUrl());
+				const data = await res.json();
+
+				if (!data.success) {
+					console.error("API error", data);
+					return;
+				}
+
+				appendRows(data.data);
+				page += 1;
+
+			} catch (err) {
+				console.error("Network error", err);
+			}
+
+			loading = false;
+			loadingEl.style.display = "none";
+		}
+
+		function appendRows(list) {
+			list.forEach(row => {
+				const tr = document.createElement("tr");
+
+				tr.innerHTML = `
+                    <td><input type="checkbox" class="rowCheck" data-id="${row.id}"></td>
+                    <td>${row.id}</td>
+                    <td>${row.title}</td>
+                    <td>${row.normalized_title}</td>
+                    <td>${row.is_duplicate}</td>
+                    <td>${row.created_at}</td>
+                    <td>
+                        <button onclick="viewRow(${row.id})">View</button>
+                        <button onclick="editRow(${row.id})">Edit</button>
+                        <button onclick="deleteRow(${row.id})">Delete</button>
+                    </td>
+                `;
+
+				tbody.appendChild(tr);
+			});
+
+			attachCheckboxEvents();
+		}
+
+		function attachCheckboxEvents() {
+			document.querySelectorAll(".rowCheck").forEach(cb => {
+				cb.onchange = function () {
+					const id = parseInt(this.dataset.id);
+					if (this.checked) selected.add(id);
+					else selected.delete(id);
+				};
+			});
+		}
+
+		bulkDeleteBtn.onclick = async function () {
+			if (selected.size === 0) return;
+
+			await fetch("/titles/bulk-delete", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ ids: [...selected] })
+			});
+
+			resetAndLoad();
+		};
+
+		selectAllBtn.onclick = () => {
+			document.querySelectorAll(".rowCheck").forEach(cb => {
+				cb.checked = true;
+				selected.add(parseInt(cb.dataset.id));
+			});
+		};
+
+		clearSelectionBtn.onclick = () => {
+			document.querySelectorAll(".rowCheck").forEach(cb => cb.checked = false);
+			selected.clear();
+		};
+
+		window.viewRow = async id => {
+			const res = await fetch(API + id);
+			const j = await res.json();
+			document.getElementById("viewContent").innerText = JSON.stringify(j, null, 2);
+			document.getElementById("viewModal").style.display = "flex";
+		};
+
+		window.closeView = () => {
+			document.getElementById("viewModal").style.display = "none";
+		};
+
+		window.editRow = async id => {
+			const res = await fetch(API + id);
+			const j = await res.json();
+
+			document.getElementById("editTitle").value = j.title;
+			document.getElementById("editNormalized").value = j.normalized_title;
+			document.getElementById("editDup").value = j.is_duplicate;
+
+			document.getElementById("editModal").dataset.id = id;
+			document.getElementById("editModal").style.display = "flex";
+		};
+
+		window.closeEdit = () => {
+			document.getElementById("editModal").style.display = "none";
+		};
+
+		window.saveEdit = async () => {
+			const id = document.getElementById("editModal").dataset.id;
+
+			await fetch(API + id, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					title: document.getElementById("editTitle").value,
+					normalized_title: document.getElementById("editNormalized").value,
+					is_duplicate: parseInt(document.getElementById("editDup").value)
+				})
+			});
+
+			closeEdit();
+			resetAndLoad();
+		};
+
+		window.deleteRow = async id => {
+			await fetch(API + id, { method: "DELETE" });
+			resetAndLoad();
+		};
+
+		searchEl.oninput = function () {
+			clearTimeout(this._timer);
+			this._timer = setTimeout(() => {
+				search = this.value;
+				resetAndLoad();
+			}, 350);
+		};
+
+		sortEl.onchange = () => {
+			sort = sortEl.value;
+			resetAndLoad();
+		};
+
+		filterEl.onchange = () => {
+			duplicateFilter = filterEl.value;
+			resetAndLoad();
+		};
+
+		infiniteToggle.onchange = () => {
+			infinite = infiniteToggle.checked;
+		};
+
+		function resetAndLoad() {
+			tbody.innerHTML = "";
+			page = 1;
+			load();
+		}
+
+		window.addEventListener("scroll", () => {
+			if (!infinite) return;
+
+			if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50) {
+				load();
+			}
+		});
+
+		load();
+	</script>
+
+</body>
+
+</html>
