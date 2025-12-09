@@ -2,6 +2,7 @@ import json
 from sqlalchemy.orm import Session
 from sklearn.cluster import KMeans
 import numpy as np
+import pandas as pd
 
 from utils.text_cleaner import clean_text
 from services.ml_service import embed_title, similarity
@@ -9,16 +10,16 @@ from models.title import Title
 
 
 # ---------------------------
-# Save Title
+# Save Single Title
 # ---------------------------
 def save_title(db: Session, item):
     raw = item.title
     clean = clean_text(raw)
 
-    # embed only once
+    # embed
     vec = embed_title(clean)
 
-    # check duplicate using cleaned version
+    # check duplicate
     dup_info = check_duplicate(db, {"title": clean})
 
     obj = Title(
@@ -44,8 +45,7 @@ def save_title(db: Session, item):
 # Duplicate Check (best match)
 # ---------------------------
 def check_duplicate(db: Session, item, threshold: float = 0.88):
-    # item may be Pydantic OR dict
-    raw = item.title if hasattr(item, "title") else item["title"]
+    raw = item["title"] if isinstance(item, dict) else item.title
     clean = clean_text(raw)
 
     new_vec = embed_title(clean)
@@ -79,7 +79,7 @@ def check_duplicate(db: Session, item, threshold: float = 0.88):
 # Find All Similar Titles
 # ---------------------------
 def find_similar_titles(db: Session, item, threshold: float = 0.75):
-    raw = item.title if hasattr(item, "title") else item["title"]
+    raw = item["title"] if isinstance(item, dict) else item.title
     clean = clean_text(raw)
 
     new_vec = embed_title(clean)
@@ -120,7 +120,7 @@ def cluster_titles(db: Session, k: int = 5):
 
     vectors_np = np.array(vectors)
 
-    model = KMeans(n_clusters=k, n_init=10)
+    model = KMeans(n_init=10, n_clusters=k)
     labels = model.fit_predict(vectors_np)
 
     clusters = {}
@@ -132,8 +132,9 @@ def cluster_titles(db: Session, k: int = 5):
 
 # ---------------------------
 # Bulk Excel Title Processor
+# df expected
 # ---------------------------
-def process_bulk_titles(titles: list[str], db: Session):
+def process_bulk_titles(db: Session, df: pd.DataFrame):
     summary = {
         "processed": 0,
         "duplicates": 0,
@@ -141,11 +142,14 @@ def process_bulk_titles(titles: list[str], db: Session):
         "details": []
     }
 
+    titles = df["title"].dropna().tolist()
+
     for raw in titles:
         summary["processed"] += 1
 
         clean = clean_text(raw)
 
+        # duplicate check
         dup_info = check_duplicate(db, {"title": clean})
 
         if dup_info["duplicate"]:
@@ -156,19 +160,21 @@ def process_bulk_titles(titles: list[str], db: Session):
                 "id": dup_info["id"],
                 "score": dup_info["score"]
             })
-        else:
-            vec = embed_title(clean)
+            continue
 
-            obj = Title(
-                title=raw,
-                normalized_title=clean,
-                embedding=json.dumps(vec),
-                is_duplicate=False
-            )
+        # save new
+        vec = embed_title(clean)
 
-            db.add(obj)
-            db.commit()
+        obj = Title(
+            title=raw,
+            normalized_title=clean,
+            embedding=json.dumps(vec),
+            is_duplicate=False
+        )
 
-            summary["saved"] += 1
+        db.add(obj)
+        db.commit()
+
+        summary["saved"] += 1
 
     return summary

@@ -13,11 +13,8 @@
 			margin: 50px auto;
 			padding: 20px;
 			background-color: #f7f7f7;
-
-			/* Added dotted background pattern */
 			background-image: radial-gradient(#ddd 1px, transparent 1px);
 			background-size: 20px 20px;
-
 			border-radius: 10px;
 			box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 		}
@@ -70,7 +67,6 @@
 			color: #856404;
 		}
 	</style>
-
 </head>
 
 <body>
@@ -86,22 +82,23 @@
 	<div id="response" class="message"></div>
 
 	<script>
+		// ✅ This must match your FastAPI prefix: /titles
+		const API_URL = "http://127.0.0.1:8000/titles";
+
 		const submitBtn = document.getElementById("submitBtn");
 		const checkBtn = document.getElementById("checkBtn");
 		const responseDiv = document.getElementById("response");
-
-		const API_URL = "http://127.0.0.1:8000";
 
 		function showMessage(msg, type) {
 			responseDiv.textContent = msg;
 			responseDiv.className = `message ${type}`;
 			responseDiv.style.display = "block";
-			setTimeout(() => { responseDiv.style.display = "none"; }, 5000);
+			setTimeout(() => responseDiv.style.display = "none", 4000);
 		}
 
-		submitBtn.addEventListener("click", async () => {
+		submitBtn.onclick = async () => {
 			const title = document.getElementById("titleInput").value.trim();
-			if (!title) { showMessage("Please enter a title.", "error"); return; }
+			if (!title) return showMessage("Enter a title.", "error");
 
 			try {
 				const res = await fetch(`${API_URL}/submit`, {
@@ -109,19 +106,23 @@
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ title })
 				});
+
 				const data = await res.json();
 
-				if (res.ok) showMessage(`Title stored successfully! ID: ${data.id}`, "success");
-				else showMessage(`Error: ${data.detail || "Unknown error"}`, "error");
+				if (res.ok) {
+					showMessage(`Saved ID: ${data.id}`, "success");
+				} else {
+					showMessage(data.detail || "Server error", "error");
+				}
 
-			} catch (err) {
-				showMessage(`Error: ${err}`, "error");
+			} catch {
+				showMessage("Network error", "error");
 			}
-		});
+		};
 
-		checkBtn.addEventListener("click", async () => {
+		checkBtn.onclick = async () => {
 			const title = document.getElementById("titleInput").value.trim();
-			if (!title) { showMessage("Please enter a title to check.", "error"); return; }
+			if (!title) return showMessage("Enter a title.", "error");
 
 			try {
 				const res = await fetch(`${API_URL}/check-duplicate`, {
@@ -129,21 +130,23 @@
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ title })
 				});
+
 				const data = await res.json();
 
 				if (res.ok) {
 					if (data.duplicate) {
-						showMessage(`Duplicate found! ID: ${data.id}, Title: ${data.title}`, "duplicate");
+						showMessage(`Duplicate ID: ${data.id}`, "duplicate");
 					} else {
-						showMessage("No duplicate found.", "success");
+						showMessage("No duplicate.", "success");
 					}
 				} else {
-					showMessage(`Error: ${data.detail || "Unknown error"}`, "error");
+					showMessage(data.detail || "Error", "error");
 				}
-			} catch (err) {
-				showMessage(`Error: ${err}`, "error");
+
+			} catch {
+				showMessage("Network error", "error");
 			}
-		});
+		};
 	</script>
 
 </body>

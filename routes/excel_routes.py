@@ -8,7 +8,6 @@ from services.title_service import process_bulk_titles
 
 router = APIRouter()
 
-
 @router.post("/upload-excel")
 async def upload_excel(
     file: UploadFile = File(...),
@@ -17,40 +16,38 @@ async def upload_excel(
     details: bool = True,
     db: Session = Depends(get_db),
 ):
-    # read file bytes
+    # read uploaded file
     contents = await file.read()
 
-    # parse excel
+    # parse excel file
     try:
         df = pd.read_excel(BytesIO(contents))
     except Exception:
-        raise HTTPException(400, "Invalid Excel file")
+        raise HTTPException(status_code=400, detail="Invalid Excel file")
 
-    # validate column
+    # verify required column
     if "title" not in df.columns:
-        raise HTTPException(400, "'title' column missing")
+        raise HTTPException(status_code=400, detail="'title' column missing")
 
-    titles = df["title"].dropna().tolist()
+    # run main Bulk Processing Engine
+    summary = process_bulk_titles(db, df)
 
-    # run your duplicate engine
-    summary = process_bulk_titles(titles, db)
+    all_details = summary.get("details", [])
 
-    full_details = summary.get("details", [])
-
-    # pagination + toggle
+    # pagination / detail toggling
     if details:
         start = (page - 1) * limit
         end = start + limit
-        page_details = full_details[start:end]
+        paginated = all_details[start:end]
     else:
-        page_details = []
+        paginated = []
 
     return {
         "processed": summary["processed"],
         "saved": summary["saved"],
         "duplicates": summary["duplicates"],
-        "total_details": len(full_details),
+        "total_details": len(all_details),
         "page": page,
         "limit": limit,
-        "details": page_details,
+        "details": paginated,
     }

@@ -14,9 +14,7 @@ from services.title_service import (
     process_bulk_titles
 )
 
-
 router = APIRouter()
-
 
 # ------------------------------
 # Submit a title
@@ -25,14 +23,12 @@ router = APIRouter()
 def submit(item: TitleCreate, db: Session = Depends(get_db)):
     return save_title(db, item)
 
-
 # ------------------------------
 # Check duplicate (best match)
 # ------------------------------
 @router.post("/check-duplicate")
 def duplicate(item: TitleCreate, db: Session = Depends(get_db)):
     return check_duplicate(db, item)
-
 
 # ------------------------------
 # Find similar titles
@@ -43,7 +39,6 @@ def similar_titles(item: TitleCreate, db: Session = Depends(get_db)):
         "results": find_similar_titles(db, item)
     }
 
-
 # ------------------------------
 # Count total duplicates stored
 # ------------------------------
@@ -53,7 +48,6 @@ def duplicate_count(db: Session = Depends(get_db)):
         "duplicate_count": count_duplicates(db)
     }
 
-
 # ------------------------------
 # Cluster titles (semantic grouping)
 # ------------------------------
@@ -61,3 +55,15 @@ def duplicate_count(db: Session = Depends(get_db)):
 def clusters(db: Session = Depends(get_db), k: int = 5):
     return cluster_titles(db, k)
 
+# ------------------------------
+# Bulk Excel Upload
+# ------------------------------
+@router.post("/bulk-upload")
+async def bulk_upload(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not file.filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="Only .xlsx files allowed")
+
+    content = await file.read()
+    df = pd.read_excel(BytesIO(content))
+
+    return process_bulk_titles(db, df)

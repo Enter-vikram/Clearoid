@@ -35,5 +35,8 @@ app.add_middleware(
 app.include_router(title_router, prefix="/titles")
 app.include_router(excel_router, prefix="/excel")
 
-# --- Frontend ---
+# --- Frontend (must be last) ---
+#app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
+
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+
