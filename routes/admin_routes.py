@@ -47,3 +47,17 @@ def stats(db: Session = Depends(get_db)):
             for r in recent
         ],
     }
+
+@router.get("/titles")
+def api_get_titles(db: Session = Depends(get_db)):
+    titles = db.query(Title).order_by(Title.created_at.desc()).limit(200).all()
+    return [
+        {
+            "id": t.id,
+            "title": t.title,
+            "status": "duplicate" if t.is_duplicate else "unique",
+            "similarity_score": 0.0,
+            "created_at": t.created_at.isoformat()
+        }
+        for t in titles
+    ]

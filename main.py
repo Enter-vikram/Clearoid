@@ -75,7 +75,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 # --------------------------
 # Register API Routers
 # --------------------------
-app.include_router(title_router, prefix="/titles", tags=["Titles"])
+app.include_router(title_router, prefix="/titles")
 app.include_router(excel_router, prefix="/excel", tags=["Excel"])
 app.include_router(admin_router, prefix="/admin", tags=["Admin"])
 

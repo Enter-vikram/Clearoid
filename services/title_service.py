@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from utils.text_cleaner import clean_text
-from services.ml_service import embed_title, similarity
+# from services.ml_service import embed_title, similarity
 from models.title import Title
 
 
