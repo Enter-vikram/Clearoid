@@ -1,317 +1,166 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>Clearoid — History</title>
-
-	<!-- ✅ External stylesheet only -->
-	<link rel="stylesheet" href="/styles.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>History – Clearoid</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script>tailwind.config = { darkMode: 'class' }</script>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<style>
+		body {
+			font-family: 'Inter', -apple-system, sans-serif;
+		}
+	</style>
 </head>
 
-<body>
+<body class="bg-gray-50 dark:bg-black min-h-screen text-gray-900 dark:text-gray-100">
+	<div class="max-w-7xl mx-auto p-6">
+		<!-- Header -->
+		<div class="mb-12 text-center">
+			<h1 class="text-5xl font-bold">Submission History</h1>
+			<p class="mt-4 text-xl text-gray-600 dark:text-gray-400">
+				Clean list — duplicates automatically detected & marked
+			</p>
+		</div>
 
-	<div class="card">
-
-		<div class="controls">
-			<input id="search" placeholder="Search titles..." />
-
-			<select id="sort">
-				<option value="newest">Newest</option>
-				<option value="oldest">Oldest</option>
-				<option value="dup">Duplicates first</option>
-				<option value="nondup">Non-duplicates first</option>
-			</select>
-
-			<select id="filterDup">
-				<option value="">All</option>
-				<option value="true">Duplicates</option>
-				<option value="false">Non-duplicates</option>
-			</select>
-
-			<div class="bulk-controls">
-				<button id="bulkDeleteBtn">Bulk Delete</button>
-				<button id="selectAllBtn">Select All</button>
-				<button id="clearSelectionBtn">Clear</button>
+		<!-- Stats Cards -->
+		<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+			<div
+				class="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl border border-gray-200 dark:border-gray-800 text-center">
+				<p class="text-4xl font-bold text-blue-600" id="total">0</p>
+				<p class="text-gray-600 dark:text-gray-400">Total Titles</p>
 			</div>
-
-			<div class="infinite-toggle">
-				<label class="small">Infinite scroll</label>
-				<input id="infiniteToggle" type="checkbox" />
+			<div
+				class="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl border border-gray-200 dark:border-gray-800 text-center">
+				<p class="text-4xl font-bold text-green-600" id="unique">0</p>
+				<p class="text-gray-600 dark:text-gray-400">Unique</p>
+			</div>
+			<div
+				class="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl border border-gray-200 dark:border-gray-800 text-center">
+				<p class="text-4xl font-bold text-amber-600" id="duplicates">0</p>
+				<p class="text-gray-600 dark:text-gray-400">Duplicates</p>
+			</div>
+			<div
+				class="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl border border-gray-200 dark:border-gray-800 text-center">
+				<p class="text-4xl font-bold text-purple-600" id="clusters">0</p>
+				<p class="text-gray-600 dark:text-gray-400">Clusters</p>
 			</div>
 		</div>
 
-		<div id="loading">Loading…</div>
-
-		<table>
-			<thead>
-				<tr>
-					<th><input id="masterCheckbox" type="checkbox" /></th>
-					<th>ID</th>
-					<th>Title</th>
-					<th>Normalized</th>
-					<th>Duplicate</th>
-					<th>Created</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody id="tbody"></tbody>
-		</table>
-
-		<div id="pagination" class="pagination"></div>
-
-	</div>
-
-	<!-- VIEW MODAL -->
-	<div id="viewModal" class="modalfade">
-		<div class="modal">
-			<h3>Title detail</h3>
-			<div id="viewContent"></div>
-			<div class="modal-actions">
-				<button onclick="closeView()">Close</button>
+		<!-- Controls -->
+		<div class="bg-white dark:bg-gray-900 rounded-3xl shadow-xl p-8 mb-8 border border-gray-200 dark:border-gray-800">
+			<div class="flex flex-col md:flex-row gap-6 items-center justify-between">
+				<div class="flex items-center gap-4">
+					<span class="font-medium text-lg">Show:</span>
+					<button id="showAll"
+						class="px-6 py-3 rounded-2xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">All
+						Titles</button>
+					<button id="showUnique"
+						class="px-6 py-3 rounded-2xl font-medium bg-blue-600 text-white hover:bg-blue-700 transition">Only
+						Unique</button>
+				</div>
+				<input id="search" placeholder="Search titles..."
+					class="px-6 py-4 rounded-2xl border-2 border-gray-300 dark:border-gray-700 bg-transparent focus:border-blue-500 focus:outline-none text-lg w-full md:w-96">
 			</div>
 		</div>
-	</div>
 
-	<!-- EDIT MODAL -->
-	<div id="editModal" class="modalfade">
-		<div class="modal">
-			<h3>Edit title</h3>
-
-			<label>Title</label>
-			<input id="editTitle" />
-
-			<label>Normalized</label>
-			<input id="editNormalized" />
-
-			<label>Duplicate flag (0/1)</label>
-			<input id="editDup" />
-
-			<div class="modal-actions">
-				<button onclick="saveEdit()">Save</button>
-				<button onclick="closeEdit()">Cancel</button>
+		<!-- Table -->
+		<div
+			class="bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+			<table class="w-full">
+				<thead class="bg-gray-50 dark:bg-gray-800">
+					<tr>
+						<th class="px-8 py-6 text-left text-sm font-semibold">ID</th>
+						<th class="px-8 py-6 text-left text-sm font-semibold">Title</th>
+						<th class="px-8 py-6 text-left text-sm font-semibold">Status</th>
+						<th class="px-8 py-6 text-left text-sm font-semibold">Submitted</th>
+					</tr>
+				</thead>
+				<tbody id="tbody" class="divide-y divide-gray-200 dark:divide-gray-800"></tbody>
+			</table>
+			<div id="loading" class="text-center py-16 text-gray-500 dark:text-gray-400 text-xl hidden">
+				Loading titles...
+			</div>
+			<div id="empty" class="text-center py-20 text-gray-500 dark:text-gray-400 text-2xl hidden">
+				No titles found.
 			</div>
 		</div>
 	</div>
 
-	<!-- ✅ JS remains unchanged -->
 	<script>
-		const API = "/titles/";
-
-		let page = 1;
-		const limit = 20;
-
-		let loading = false;
-		let search = "";
-		let sort = "newest";
-		let duplicateFilter = "";
-		let infinite = false;
-
-		let selected = new Set();
-
 		const tbody = document.getElementById("tbody");
-		const loadingEl = document.getElementById("loading");
+		const loading = document.getElementById("loading");
+		const empty = document.getElementById("empty");
+		const searchInput = document.getElementById("search");
+		const showAllBtn = document.getElementById("showAll");
+		const showUniqueBtn = document.getElementById("showUnique");
+		let allTitles = [];
+		let showOnlyUnique = false;
 
-		const searchEl = document.getElementById("search");
-		const sortEl = document.getElementById("sort");
-		const filterEl = document.getElementById("filterDup");
-
-		const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
-		const selectAllBtn = document.getElementById("selectAllBtn");
-		const clearSelectionBtn = document.getElementById("clearSelectionBtn");
-		const infiniteToggle = document.getElementById("infiniteToggle");
-
-		function buildUrl() {
-			let url = `${API}?page=${page}&limit=${limit}`;
-
-			if (search.trim() !== "")
-				url += `&search=${encodeURIComponent(search)}`;
-
-			if (sort)
-				url += `&sort=${sort}`;
-
-			if (duplicateFilter === "true")
-				url += `&duplicates=true`;
-
-			if (duplicateFilter === "false")
-				url += `&duplicates=false`;
-
-			return url;
-		}
-
-		async function load() {
-			if (loading) return;
-
-			loading = true;
-			loadingEl.style.display = "block";
-
-			try {
-				const res = await fetch(buildUrl());
-				const data = await res.json();
-
-				if (!data.success) {
-					console.error("API error", data);
-					return;
+		async function loadTitles() {
+				loading.classList.remove("hidden");
+				tbody.innerHTML = "";
+				try {
+					const res = await fetch("/?limit=1000");  // ← THIS LINE FIXED
+					const data = await res.json();
+					allTitles = data.data || [];
+					render();
+					updateStats();
+				} catch (e) {
+					empty.textContent = "Error loading data";
+					empty.classList.remove("hidden");
 				}
-
-				appendRows(data.data);
-				page += 1;
-
-			} catch (err) {
-				console.error("Network error", err);
+				loading.classList.add("hidden");
 			}
 
-			loading = false;
-			loadingEl.style.display = "none";
-		}
+		function render() {
+			tbody.innerHTML = "";
+			const filtered = allTitles
+				.filter(t => !showOnlyUnique || t.is_duplicate === 0)
+				.filter(t => !searchInput.value || t.title.toLowerCase().includes(searchInput.value.toLowerCase()));
 
-		function appendRows(list) {
-			list.forEach(row => {
+			if (filtered.length === 0) {
+				empty.classList.remove("hidden");
+				return;
+			}
+			empty.classList.add("hidden");
+
+			filtered.forEach(t => {
 				const tr = document.createElement("tr");
-
+				tr.className = "hover:bg-gray-50 dark:hover:bg-gray-800 transition";
 				tr.innerHTML = `
-                    <td><input type="checkbox" class="rowCheck" data-id="${row.id}"></td>
-                    <td>${row.id}</td>
-                    <td>${row.title}</td>
-                    <td>${row.normalized_title}</td>
-                    <td>${row.is_duplicate}</td>
-                    <td>${row.created_at}</td>
-                    <td>
-                        <button onclick="viewRow(${row.id})">View</button>
-                        <button onclick="editRow(${row.id})">Edit</button>
-                        <button onclick="deleteRow(${row.id})">Delete</button>
-                    </td>
-                `;
-
+          <td class="px-8 py-6 font-medium">#${t.id}</td>
+          <td class="px-8 py-6 max-w-2xl">${t.title}</td>
+          <td class="px-8 py-6">
+            <span class="${t.is_duplicate ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'} px-4 py-2 rounded-full text-sm font-medium">
+              ${t.is_duplicate ? 'Duplicate' : 'Unique'}
+            </span>
+          </td>
+          <td class="px-8 py-6 text-gray-500">${new Date(t.created_at).toLocaleDateString()}</td>
+        `;
 				tbody.appendChild(tr);
 			});
-
-			attachCheckboxEvents();
 		}
 
-		function attachCheckboxEvents() {
-			document.querySelectorAll(".rowCheck").forEach(cb => {
-				cb.onchange = function () {
-					const id = parseInt(this.dataset.id);
-					if (this.checked) selected.add(id);
-					else selected.delete(id);
-				};
-			});
+		function updateStats() {
+			const total = allTitles.length;
+			const unique = allTitles.filter(t => t.is_duplicate === 0).length;
+			const duplicates = total - unique;
+			document.getElementById("total").textContent = total;
+			document.getElementById("unique").textContent = unique;
+			document.getElementById("duplicates").textContent = duplicates;
+			document.getElementById("clusters").textContent = new Set(allTitles.filter(t => t.is_duplicate).map(t => t.normalized_title)).size;
 		}
 
-		bulkDeleteBtn.onclick = async function () {
-			if (selected.size === 0) return;
+		showAllBtn.onclick = () => { showOnlyUnique = false; showAllBtn.classList.add("bg-blue-600", "text-white"); showUniqueBtn.classList.remove("bg-blue-600", "text-white"); render(); };
+		showUniqueBtn.onclick = () => { showOnlyUnique = true; showUniqueBtn.classList.add("bg-blue-600", "text-white"); showAllBtn.classList.remove("bg-blue-600", "text-white"); render(); };
+		searchInput.oninput = () => setTimeout(render, 300);
 
-			await fetch("/titles/bulk-delete", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ ids: [...selected] })
-			});
-
-			resetAndLoad();
-		};
-
-		selectAllBtn.onclick = () => {
-			document.querySelectorAll(".rowCheck").forEach(cb => {
-				cb.checked = true;
-				selected.add(parseInt(cb.dataset.id));
-			});
-		};
-
-		clearSelectionBtn.onclick = () => {
-			document.querySelectorAll(".rowCheck").forEach(cb => cb.checked = false);
-			selected.clear();
-		};
-
-		window.viewRow = async id => {
-			const res = await fetch(API + id);
-			const j = await res.json();
-			document.getElementById("viewContent").innerText = JSON.stringify(j, null, 2);
-			document.getElementById("viewModal").style.display = "flex";
-		};
-
-		window.closeView = () => {
-			document.getElementById("viewModal").style.display = "none";
-		};
-
-		window.editRow = async id => {
-			const res = await fetch(API + id);
-			const j = await res.json();
-
-			document.getElementById("editTitle").value = j.title;
-			document.getElementById("editNormalized").value = j.normalized_title;
-			document.getElementById("editDup").value = j.is_duplicate;
-
-			document.getElementById("editModal").dataset.id = id;
-			document.getElementById("editModal").style.display = "flex";
-		};
-
-		window.closeEdit = () => {
-			document.getElementById("editModal").style.display = "none";
-		};
-
-		window.saveEdit = async () => {
-			const id = document.getElementById("editModal").dataset.id;
-
-			await fetch(API + id, {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					title: document.getElementById("editTitle").value,
-					normalized_title: document.getElementById("editNormalized").value,
-					is_duplicate: parseInt(document.getElementById("editDup").value)
-				})
-			});
-
-			closeEdit();
-			resetAndLoad();
-		};
-
-		window.deleteRow = async id => {
-			await fetch(API + id, { method: "DELETE" });
-			resetAndLoad();
-		};
-
-		searchEl.oninput = function () {
-			clearTimeout(this._timer);
-			this._timer = setTimeout(() => {
-				search = this.value;
-				resetAndLoad();
-			}, 350);
-		};
-
-		sortEl.onchange = () => {
-			sort = sortEl.value;
-			resetAndLoad();
-		};
-
-		filterEl.onchange = () => {
-			duplicateFilter = filterEl.value;
-			resetAndLoad();
-		};
-
-		infiniteToggle.onchange = () => {
-			infinite = infiniteToggle.checked;
-		};
-
-		function resetAndLoad() {
-			tbody.innerHTML = "";
-			page = 1;
-			load();
-		}
-
-		window.addEventListener("scroll", () => {
-			if (!infinite) return;
-
-			if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50) {
-				load();
-			}
-		});
-
-		load();
+		loadTitles();
+		setInterval(loadTitles, 10000); // Auto-refresh every 10s
 	</script>
-
 </body>
 
 </html>

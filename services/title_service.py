@@ -1,180 +1,143 @@
-import json
+# services/title_service.py
 from sqlalchemy.orm import Session
-from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import pandas as pd
-
+import json
 from utils.text_cleaner import clean_text
-# from services.ml_service import embed_title, similarity
+from services.ml_service import get_embedding
 from models.title import Title
 
 
-# ---------------------------
-# Save Single Title
-# ---------------------------
 def save_title(db: Session, item):
     raw = item.title
     clean = clean_text(raw)
-
-    # embed
-    vec = embed_title(clean)
-
-    # check duplicate
+    vec = get_embedding(clean)
     dup_info = check_duplicate(db, {"title": clean})
 
     obj = Title(
         title=raw,
         normalized_title=clean,
-        embedding=json.dumps(vec),
-        is_duplicate=dup_info["duplicate"]
+        embedding=vec.tobytes(),
+        is_duplicate=1 if dup_info["duplicate"] else 0
     )
-
     db.add(obj)
     db.commit()
     db.refresh(obj)
-
-    return {
-        "message": "Saved",
-        "id": obj.id,
-        "duplicate": dup_info["duplicate"],
-        "duplicate_score": dup_info["score"]
-    }
+    return obj  # Return full model for TitleOut
 
 
-# ---------------------------
-# Duplicate Check (best match)
-# ---------------------------
-def check_duplicate(db: Session, item, threshold: float = 0.88):
+def check_duplicate(db: Session, item, threshold: float = 0.85):
     raw = item["title"] if isinstance(item, dict) else item.title
     clean = clean_text(raw)
-
-    new_vec = embed_title(clean)
-
+    new_vec = get_embedding(clean)
     best_score = 0.0
-    best_match = None
 
     for row in db.query(Title).all():
-        stored_vec = json.loads(row.embedding)
-        score = similarity(new_vec, stored_vec)
+        if not row.embedding:
+            continue
+        try:
+            if isinstance(row.embedding, str):
+                stored_vec = np.array(json.loads(row.embedding), dtype=np.float32)
+            else:
+                stored_vec = np.frombuffer(row.embedding, dtype=np.float32)
+            score = float(cosine_similarity([new_vec], [stored_vec])[0][0])
+            if score > best_score:
+                best_score = score
+        except:
+            continue
 
-        if score > best_score:
-            best_score = score
-            best_match = row
+    # FIXED: Convert numpy types to native Python types
+    is_duplicate = bool(best_score >= threshold)
+    score = round(float(best_score), 3)
 
-    if best_match and best_score >= threshold:
-        return {
-            "duplicate": True,
-            "score": best_score,
-            "id": best_match.id,
-            "title": best_match.title
-        }
-
-    return {
-        "duplicate": False,
-        "score": best_score
-    }
+    return {"duplicate": is_duplicate, "score": score}
 
 
-# ---------------------------
-# Find All Similar Titles
-# ---------------------------
 def find_similar_titles(db: Session, item, threshold: float = 0.75):
     raw = item["title"] if isinstance(item, dict) else item.title
     clean = clean_text(raw)
-
-    new_vec = embed_title(clean)
+    new_vec = get_embedding(clean)
     similar = []
 
     for row in db.query(Title).all():
-        stored_vec = json.loads(row.embedding)
-        score = similarity(new_vec, stored_vec)
-
-        if score >= threshold:
-            similar.append({
-                "id": row.id,
-                "title": row.title,
-                "score": score
-            })
+        if not row.embedding:
+            continue
+        try:
+            if isinstance(row.embedding, str):
+                stored_vec = np.array(json.loads(row.embedding), dtype=np.float32)
+            else:
+                stored_vec = np.frombuffer(row.embedding, dtype=np.float32)
+            score = float(cosine_similarity([new_vec], [stored_vec])[0][0])
+            if score >= threshold:
+                similar.append({
+                    "id": row.id,
+                    "title": row.title,
+                    "score": round(score, 3)
+                })
+        except:
+            continue
 
     similar.sort(key=lambda x: x["score"], reverse=True)
     return similar
 
 
-# ---------------------------
-# Count total duplicates saved
-# ---------------------------
-def count_duplicates(db: Session):
-    return db.query(Title).filter(Title.is_duplicate == True).count()
-
-
-# ---------------------------
-# Cluster Titles by Meaning
-# ---------------------------
-def cluster_titles(db: Session, k: int = 5):
-    rows = db.query(Title).all()
-    if not rows:
-        return {"error": "No titles in database"}
-
-    vectors = [json.loads(r.embedding) for r in rows]
-    ids = [r.id for r in rows]
-
-    vectors_np = np.array(vectors)
-
-    model = KMeans(n_init=10, n_clusters=k)
-    labels = model.fit_predict(vectors_np)
-
-    clusters = {}
-    for label, row_id in zip(labels, ids):
-        clusters.setdefault(label, []).append(row_id)
-
-    return clusters
-
-
-# ---------------------------
-# Bulk Excel Title Processor
-# df expected
-# ---------------------------
 def process_bulk_titles(db: Session, df: pd.DataFrame):
-    summary = {
-        "processed": 0,
-        "duplicates": 0,
-        "saved": 0,
-        "details": []
-    }
+    summary = {"processed": 0, "duplicates": 0, "saved": 0}
+    titles = df["title"].dropna().astype(str).tolist()
 
-    titles = df["title"].dropna().tolist()
+    # Load existing embeddings
+    existing = db.query(Title).all()
+    existing_embs = []
+    for t in existing:
+        if t.embedding:
+            try:
+                if isinstance(t.embedding, str):
+                    vec = np.array(json.loads(t.embedding), dtype=np.float32)
+                else:
+                    vec = np.frombuffer(t.embedding, dtype=np.float32)
+                existing_embs.append(vec)
+            except:
+                continue
+
+    batch_cleaned = set()
 
     for raw in titles:
         summary["processed"] += 1
+        clean = clean_text(raw).strip()
 
-        clean = clean_text(raw)
-
-        # duplicate check
-        dup_info = check_duplicate(db, {"title": clean})
-
-        if dup_info["duplicate"]:
+        # Exact match in batch
+        if clean in batch_cleaned:
             summary["duplicates"] += 1
-            summary["details"].append({
-                "title": raw,
-                "duplicate": True,
-                "id": dup_info["id"],
-                "score": dup_info["score"]
-            })
             continue
 
-        # save new
-        vec = embed_title(clean)
+        # Semantic match against DB
+        is_duplicate = False
+        if existing_embs:
+            new_emb = get_embedding(clean)
+            scores = cosine_similarity([new_emb], existing_embs)[0]
+            if float(scores.max()) >= 0.85:
+                is_duplicate = True
 
+        if is_duplicate:
+            summary["duplicates"] += 1
+            continue
+
+        # Save unique
+        vec = get_embedding(clean)
         obj = Title(
             title=raw,
             normalized_title=clean,
-            embedding=json.dumps(vec),
-            is_duplicate=False
+            embedding=vec.tobytes(),
+            is_duplicate=0
         )
-
         db.add(obj)
         db.commit()
-
         summary["saved"] += 1
+        batch_cleaned.add(clean)
 
     return summary
+
+
+def count_duplicates(db: Session):
+    return db.query(Title).filter(Title.is_duplicate == 1).count()

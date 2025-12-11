@@ -1,77 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 
 <head>
 	<meta charset="UTF-8">
-	<title>Upload Titles</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Upload Excel – Clearoid</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script>tailwind.config = { darkMode: 'class' }</script>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<style>
+		body {
+			font-family: 'Inter', -apple-system, sans-serif;
+		}
+	</style>
 
-	<link rel="stylesheet" href="/styles.css">
+
+	<style>
+		#response {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			z-index: 50;
+			max-width: 90%;
+			width: 500px;
+			box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+		}
+	
+		body:has(#response:not(.hidden))::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.4);
+			z-index: 40;
+		}
+	</style>
+
 </head>
 
-<body>
-
-	<div class="container">
-
-		<h2>Upload Titles</h2>
-
-		<p>Select an Excel or CSV file. The backend will extract titles, normalize them and detect duplicates.</p>
-
-		<input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-
-		<div style="margin-top:15px;">
-			<button class="btn-primary" id="uploadBtn">Upload & Process</button>
+<body class="bg-gray-50 dark:bg-black min-h-screen flex items-center justify-center p-6">
+	<div class="w-full max-w-2xl">
+		<div class="text-center mb-12">
+			<h1 class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white">Upload Excel</h1>
+			<p class="mt-4 text-xl text-gray-600 dark:text-gray-400">
+				Drop your Excel/CSV file — duplicates will be removed automatically
+			</p>
 		</div>
 
-		<div id="loader">Processing…</div>
+		<div
+			class="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-16 border-2 border-dashed border-gray-300 dark:border-gray-700 text-center">
+			<div id="dropZone" class="cursor-pointer">
+				<svg class="mx-auto h-20 w-20 text-gray-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+					<path
+						d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+						stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+				<p class="text-2xl font-medium text-gray-700 dark:text-gray-300">Click to select or drag & drop</p>
+				<p class="mt-2 text-gray-500">Excel (.xlsx, .xls) or CSV files only</p>
+				<input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
+			</div>
 
-		<div id="status" style="margin-top:15px;"></div>
+			<div id="processing" class="hidden mt-10">
+				<div class="inline-flex items-center">
+					<svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+						viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+					</svg>
+					<span class="ml-4 text-xl">Processing your file...</span>
+				</div>
+			</div>
 
-		<a href="/history.html" id="viewLink" style="display:none;" class="btn-neutral">View Results</a>
+			<div id="result"
+				class="hidden mt-10 p-8 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl">
+				<p class="text-2xl font-bold text-green-800 dark:text-green-400" id="resultText"></p>
+				<a href="/history.html"
+					class="mt-6 inline-block px-10 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-2xl shadow-lg transition">
+					View Clean List →
+				</a>
+			</div>
+		</div>
 
+		<div class="text-center mt-10">
+			<a href="/" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:underline">← Back</a>
+		</div>
 	</div>
 
 	<script>
-		const fileInput = document.getElementById("fileInput");
-		const uploadBtn = document.getElementById("uploadBtn");
-		const loader = document.getElementById("loader");
-		const status = document.getElementById("status");
-		const viewLink = document.getElementById("viewLink");
+		const fileInput = document.getElementById('fileInput');
+		const dropZone = document.getElementById('dropZone');
+		const processing = document.getElementById('processing');
+		const result = document.getElementById('result');
+		const resultText = document.getElementById('resultText');
 
-		uploadBtn.onclick = async () => {
-			const f = fileInput.files[0];
+		['dragover', 'dragenter'].forEach(evt => dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('border-blue-500'); }));
+		['dragleave', 'dragend'].forEach(evt => dropZone.addEventListener(evt, () => dropZone.classList.remove('border-blue-500')));
+		dropZone.addEventListener('drop', e => {
+			e.preventDefault();
+			dropZone.classList.remove('border-blue-500');
+			if (e.dataTransfer.files.length) fileInput.files = e.dataTransfer.files;
+			uploadFile();
+		});
+		dropZone.addEventListener('click', () => fileInput.click());
+		fileInput.addEventListener('change', uploadFile);
 
-			if (!f) {
-				alert("Choose a file first");
-				return;
-			}
+		async function uploadFile() {
+			const file = fileInput.files[0];
+			if (!file) return;
 
-			uploadBtn.disabled = true;
-			loader.style.display = "block";
-			status.innerText = "Uploading...";
+			processing.classList.remove('hidden');
+			result.classList.add('hidden');
 
-			const fd = new FormData();
-			fd.append("file", f);
+			const formData = new FormData();
+			formData.append('file', file);
 
 			try {
-				const res = await fetch("/upload-file", {
-					method: "POST",
-					body: fd
-				});
+				const res = await fetch('/bulk-upload', { method: 'POST', body: formData });
+				const data = await res.json();
 
-				const j = await res.json();
-
-				status.innerText = "Done!";
-				viewLink.style.display = "inline-block";
-
-			} catch (e) {
-				status.innerText = "Error: " + e;
+				processing.classList.add('hidden');
+				result.classList.remove('hidden');
+				resultText.innerHTML = `
+	        <strong>Success!</strong><br>
+	        ${data.saved || 0} unique titles saved<br>
+	        ${data.duplicates || 0} duplicates removed
+	      `;
+			} catch (err) {
+				processing.classList.add('hidden');
+				result.classList.remove('hidden');
+				resultText.innerHTML = 'Upload failed. Check server.';
+				result.classList.add('bg-red-50', 'border-red-300');
 			}
-
-			loader.style.display = "none";
-			uploadBtn.disabled = false;
-		};
+		}
 	</script>
-
+	
 </body>
 
 </html>

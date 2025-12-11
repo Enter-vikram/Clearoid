@@ -1,137 +1,44 @@
-/* Global Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* Optional extra polish — Tailwind already does 99% */
+html {
+  scroll-behavior: smooth;
+}
+::selection {
+  background: #3b82f6;
+  color: white;
+}
+.dark ::selection {
+  background: #60a5fa;
 }
 
-/* Body */
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f5f7;
-    color: #222;
-    line-height: 1.4;
-    padding: 20px;
+/* Floating label animation fix */
+.peer:focus ~ label,
+.peer:not(:placeholder-shown) ~ label {
+  transform: translateY(-2rem) scale(0.85);
+  background: inherit;
 }
 
-/* Main layout container */
-.container {
-    max-width: 900px;
-    margin: auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+/* Subtle hover lift */
+button,
+a > button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+button:hover,
+a > button:hover {
+  transform: translateY(-4px);
 }
 
-/* Headings */
-h1, h2 {
-    margin-bottom: 15px;
-    font-weight: 600;
-    color: #333;
+#response {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  max-width: 500px;
+  z-index: 10;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Buttons */
-button {
-    cursor: pointer;
-    padding: 8px 15px;
-    border-radius: 6px;
-    border: none;
-    font-size: 14px;
-}
-
-.btn-primary {
-    background: #2563eb;
-    color: white;
-}
-
-.btn-danger {
-    background: #dc2626;
-    color: white;
-}
-
-.btn-neutral {
-    background: #e5e7eb;
-    color: #333;
-}
-
-/* Table */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-}
-
-th, td {
-    border-bottom: 1px solid #e2e8f0;
-    padding: 10px;
-}
-
-th {
-    background: #f8fafc;
-    font-weight: 600;
-}
-
-tr:hover {
-    background: #f1f5f9;
-}
-
-/* Input controls */
-input, select {
-    padding: 8px;
-    border: 1px solid #cbd5e1;
-    border-radius: 5px;
-    font-size: 14px;
-}
-
-/* Top bar filters */
-.controls {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 15px;
-}
-
-/* Loader (for infinite scroll) */
-#loader {
-    text-align: center;
-    padding: 20px;
-    display: none;
-    color: #666;
-    font-size: 14px;
-}
-
-/* Chip badges */
-.badge {
-    display: inline-block;
-    padding: 3px 8px;
-    font-size: 12px;
-    background: #e2e8f0;
-    border-radius: 5px;
-    color: #444;
-}
-
-/* Modal (future use) */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-box {
-    background: #fff;
-    padding: 20px;
-    width: 400px;
-    border-radius: 10px;
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.2);
-}
-
-/* Mobile responsive */
-@media (max-width: 600px) {
-    .controls {
-        flex-direction: column;
-        gap: 10px;
-    }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
