@@ -1,153 +1,165 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Clearoid</title>
+
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script>
+		tailwind.config = {
+			darkMode: 'class'
+		}
+	</script>
+
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 	<style>
 		body {
-			font-family: Arial, sans-serif;
-			max-width: 600px;
-			margin: 50px auto;
-			padding: 20px;
-			background-color: #f7f7f7;
-			background-image: radial-gradient(#ddd 1px, transparent 1px);
-			background-size: 20px 20px;
-			border-radius: 10px;
-			box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-		}
-
-		h1 {
-			text-align: center;
-			color: #333;
-		}
-
-		input,
-		button {
-			padding: 10px;
-			margin: 5px 0;
-			width: 100%;
-			border-radius: 5px;
-			border: 1px solid #ccc;
-			font-size: 16px;
-		}
-
-		button {
-			background: #4CAF50;
-			color: white;
-			cursor: pointer;
-			border: none;
-		}
-
-		button:hover {
-			background: #45a049;
-		}
-
-		.message {
-			margin-top: 10px;
-			padding: 10px;
-			border-radius: 5px;
-			display: none;
-		}
-
-		.success {
-			background-color: #d4edda;
-			color: #155724;
-		}
-
-		.error {
-			background-color: #f8d7da;
-			color: #721c24;
-		}
-
-		.duplicate {
-			background-color: #fff3cd;
-			color: #856404;
+			font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 		}
 	</style>
 </head>
 
-<body>
+<body class="bg-gray-50 dark:bg-black min-h-screen flex items-center justify-center p-6">
 
-	<h1>Clearoid</h1>
+	<div class="w-full max-w-2xl">
 
-	<label for="titleInput">Enter a Title:</label>
-	<input type="text" id="titleInput" placeholder="Type your title here">
+		<!-- Title -->
+		<div class="text-center mb-12">
+			<h1 class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white tracking-tight">Clearoid</h1>
+			<p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
+				Real-time AI duplicate detection for project titles
+			</p>
+		</div>
 
-	<button id="submitBtn">Submit Title</button>
-	<button id="checkBtn">Check Duplicate</button>
+		<!-- Card -->
+		<div class="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-10 border border-gray-200 dark:border-gray-800">
 
-	<div id="response" class="message"></div>
-	
-	<a href="history.html">Go to History</a>
+			<!-- Input with floating label -->
+			<div class="relative">
+				<input type="text" id="titleInput" placeholder=" " class="w-full px-5 py-6 text-xl bg-transparent border-2 border-gray-300 
+                           dark:border-gray-700 rounded-2xl focus:outline-none 
+                           focus:border-blue-500 peer transition" />
+				<label class="absolute left-5 top-6 text-gray-500 dark:text-gray-400 text-lg
+                           pointer-events-none transition-all
+                           peer-placeholder-shown:top-6
+                           peer-placeholder-shown:text-gray-400
+                           peer-focus:-top-3
+                           peer-focus:text-blue-600
+                           peer-focus:text-sm
+                           peer-focus:bg-white
+                           dark:peer-focus:bg-gray-900
+                           px-2">
+					Enter project title
+				</label>
+			</div>
+
+			<!-- Buttons -->
+			<div class="flex gap-4 mt-10">
+				<button id="submitBtn" class="flex-1 bg-black dark:bg-white text-white dark:text-black 
+                               font-semibold py-5 rounded-2xl hover:opacity-90 transition shadow-lg">
+					Submit Title
+				</button>
+
+				<button id="checkBtn" class="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 
+                               font-semibold py-5 rounded-2xl hover:bg-gray-200 
+                               dark:hover:bg-gray-700 transition shadow-lg">
+					Check Duplicate
+				</button>
+			</div>
+
+			<!-- OR Divider -->
+			<div class="text-center text-gray-500 dark:text-gray-400 my-10 text-lg">or</div>
+
+			<!-- Upload Excel -->
+			<a href="/upload.html">
+				<!-- Orange style -->
+				<!--
+                <button class="w-full bg-orange-500 hover:bg-orange-600 text-white 
+                               font-bold py-6 rounded-3xl text-xl shadow-xl 
+                               transform hover:scale-105 transition duration-300">
+                    Upload Excel File (Bulk)
+                </button>
+                -->
+
+				<!-- Black (Apple style) -->
+				<!--
+                <button class="w-full bg-black hover:bg-gray-800 text-white 
+                               font-bold py-6 rounded-3xl text-xl shadow-xl 
+                               transform hover:scale-105 transition duration-300">
+                    Upload Excel File (Bulk)
+                </button>
+                -->
+
+				<!-- White with border (default) -->
+				<button class="w-full bg-white text-black border hover:bg-gray-100 
+                               font-bold py-6 rounded-3xl text-xl shadow-xl 
+                               transform hover:scale-105 transition duration-300">
+					Upload Excel File (Bulk)
+				</button>
+			</a>
+
+			<!-- Response -->
+			<div id="response" class="message hidden mt-8 text-center py-5 rounded-2xl text-lg font-medium">
+			</div>
+
+			<!-- Link -->
+			<div class="text-center mt-10">
+				<a href="/history.html" class="text-blue-600 dark:text-blue-400 hover:underline font-medium text-lg">
+					View all submissions →
+				</a>
+			</div>
+
+		</div>
+	</div>
 
 	<script>
-		// ✅ This must match your FastAPI prefix: /titles
 		const API_URL = "http://127.0.0.1:8000/titles";
-
-		const submitBtn = document.getElementById("submitBtn");
-		const checkBtn = document.getElementById("checkBtn");
 		const responseDiv = document.getElementById("response");
 
-		function showMessage(msg, type) {
+		function showMessage(msg, type = "success") {
 			responseDiv.textContent = msg;
-			responseDiv.className = `message ${type}`;
-			responseDiv.style.display = "block";
-			setTimeout(() => responseDiv.style.display = "none", 4000);
+			responseDiv.className =
+				`message block font-medium text-lg py-5 px-8 rounded-2xl ${type === 'success'
+					? 'bg-green-50 text-green-800 border border-green-200'
+					: type === 'duplicate'
+						? 'bg-amber-50 text-amber-800 border border-amber-200'
+						: 'bg-red-50 text-red-800 border border-red-200'
+				}`;
 		}
 
-		submitBtn.onclick = async () => {
+		document.getElementById("submitBtn").onclick = async () => {
 			const title = document.getElementById("titleInput").value.trim();
-			if (!title) return showMessage("Enter a title.", "error");
+			if (!title) return showMessage("Please enter a title", "error");
 
-			try {
-				const res = await fetch(`${API_URL}/submit`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ title })
-				});
+			const res = await fetch(`${API_URL}/submit`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ title })
+			});
 
-				const data = await res.json();
-
-				if (res.ok) {
-					showMessage(`Saved ID: ${data.id}`, "success");
-				} else {
-					showMessage(data.detail || "Server error", "error");
-				}
-
-			} catch {
-				showMessage("Network error", "error");
-			}
+			const data = await res.json();
+			res.ok
+				? showMessage(`Saved – ID: ${data.id}`, "success")
+				: showMessage("Error", "error");
 		};
 
-		checkBtn.onclick = async () => {
+		document.getElementById("checkBtn").onclick = async () => {
 			const title = document.getElementById("titleInput").value.trim();
-			if (!title) return showMessage("Enter a title.", "error");
+			if (!title) return showMessage("Please enter a title", "error");
 
-			try {
-				const res = await fetch(`${API_URL}/check-duplicate`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ title })
-				});
+			const res = await fetch(`${API_URL}/check-duplicate`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ title })
+			});
 
-				const data = await res.json();
-
-				if (res.ok) {
-					if (data.duplicate) {
-						showMessage(`Duplicate ID: ${data.id}`, "duplicate");
-					} else {
-						showMessage("No duplicate.", "success");
-					}
-				} else {
-					showMessage(data.detail || "Error", "error");
-				}
-
-			} catch {
-				showMessage("Network error", "error");
-			}
+			const data = await res.json();
+			data.duplicate
+				? showMessage(`Duplicate found – ID: ${data.id}`, "duplicate")
+				: showMessage("Unique title", "success");
 		};
 	</script>
 
