@@ -71,6 +71,11 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"success": False, "detail": "Internal server error"},
     )
 
+# --------------------------
+# FRONTEND
+# --------------------------
+# Must be LAST — catches all frontend routing
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 # --------------------------
 # Register API Routers
@@ -78,10 +83,3 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(title_router)  # removes prefix → /webhook/bulk-upload works again
 app.include_router(excel_router, prefix="/excel", tags=["Excel"])
 app.include_router(admin_router, prefix="/admin", tags=["Admin"])
-
-
-# --------------------------
-# FRONTEND
-# --------------------------
-# Must be LAST — catches all frontend routing
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

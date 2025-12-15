@@ -1,13 +1,12 @@
 # routes/title_routes.py
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import pandas as pd
-from io import BytesIO
-from typing import List
+import os
 
-from database.database import get_db, SessionLocal
-from schemas.title_schema import TitleCreate, TitleUpdate, TitleOut
+from database.database import get_db
+from schemas.title_schema import TitleCreate, TitleOut
 from services.title_service import (
     save_title,
     check_duplicate,
@@ -17,37 +16,10 @@ from services.title_service import (
 )
 from models.title import Title
 
-router = APIRouter()   # no prefix
+# For background jobs
+from jobs import q, process_file_bulk
 
-# WEBHOOK ENDPOINT — FINAL 100% WORKING VERSION
-from services.ml_service import get_embedding, find_duplicates
-import numpy as np
-
-@router.post("/title")
-async def webhook_receive_title(payload: TitleCreate):
-    embedding = get_embedding(payload.title)
-    duplicate_info, score = find_duplicates(payload.title)
-    status = "duplicate" if duplicate_info else "unique"
-
-    db = SessionLocal()
-    try:
-        new_entry = Title(
-            title=payload.title,
-            normalized_title=payload.title.lower().strip(),
-            embedding=embedding.tobytes(),
-            is_duplicate=1 if status == "duplicate" else 0,
-        )
-        db.add(new_entry)
-        db.commit()
-    finally:
-        db.close()
-
-    return {
-        "title": payload.title,
-        "status": status,
-        "similarity_score": round(score, 3),
-        "duplicate_match": duplicate_info
-    }
+router = APIRouter()  # no prefix
 
 # ----------------------------------------------------------
 @router.post("/submit", response_model=TitleOut)
@@ -55,7 +27,7 @@ def submit(item: TitleCreate, db: Session = Depends(get_db)):
     return save_title(db, item)
 
 @router.post("/check-duplicate")
-def duplicate(item: TitleCreate, db: Session = Depends(get_db)):
+def check_duplicate_route(item: TitleCreate, db: Session = Depends(get_db)):
     return check_duplicate(db, item)
 
 @router.post("/similar-titles")
@@ -106,12 +78,30 @@ def delete_group(name: str, db: Session = Depends(get_db)):
     return {"success": True}
 
 @router.post("/bulk-upload")
-async def bulk_upload(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    if not file.filename.endswith(".xlsx"):
-        raise HTTPException(status_code=400, detail="Only .xlsx files allowed")
+async def bulk_upload(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="Only Excel files allowed")
+    
+    # Read file content
     content = await file.read()
-    df = pd.read_excel(BytesIO(content))
-    return process_bulk_titles(db, df)
+    
+    # Save to temp directory
+    temp_dir = "./temp"
+    os.makedirs(temp_dir, exist_ok=True)
+    temp_path = os.path.join(temp_dir, file.filename)
+    
+    with open(temp_path, "wb") as f:
+        f.write(content)
+    
+    # Enqueue background job
+    job = q.enqueue(process_file_bulk, temp_path)
+    
+    return {
+        "job_id": job.get_id(),
+        "status": "queued",
+        "message": "File uploaded and processing started in background",
+        "filename": file.filename
+    }
 
 @router.get("/", summary="Get titles list")
 def get_titles(

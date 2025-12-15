@@ -55,11 +55,13 @@
 				<div class="flex items-center gap-4">
 					<span class="font-medium text-lg">Show:</span>
 					<button id="showAll"
-						class="px-6 py-3 rounded-2xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">All
-						Titles</button>
+						class="px-6 py-3 rounded-2xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+						All Titles
+					</button>
 					<button id="showUnique"
-						class="px-6 py-3 rounded-2xl font-medium bg-blue-600 text-white hover:bg-blue-700 transition">Only
-						Unique</button>
+						class="px-6 py-3 rounded-2xl font-medium bg-blue-600 text-white hover:bg-blue-700 transition">
+						Only Unique
+					</button>
 				</div>
 				<input id="search" placeholder="Search titles..."
 					class="px-6 py-4 rounded-2xl border-2 border-gray-300 dark:border-gray-700 bg-transparent focus:border-blue-500 focus:outline-none text-lg w-full md:w-96">
@@ -100,20 +102,20 @@
 		let showOnlyUnique = false;
 
 		async function loadTitles() {
-				loading.classList.remove("hidden");
-				tbody.innerHTML = "";
-				try {
-					const res = await fetch("/?limit=1000");  // ← THIS LINE FIXED
-					const data = await res.json();
-					allTitles = data.data || [];
-					render();
-					updateStats();
-				} catch (e) {
-					empty.textContent = "Error loading data";
-					empty.classList.remove("hidden");
-				}
-				loading.classList.add("hidden");
+			loading.classList.remove("hidden");
+			tbody.innerHTML = "";
+			try {
+				const res = await fetch("/?limit=1000");  // ← Correct path — no prefix
+				const data = await res.json();
+				allTitles = data.data || [];
+				render();
+				updateStats();
+			} catch (e) {
+				empty.textContent = "Error loading data";
+				empty.classList.remove("hidden");
 			}
+			loading.classList.add("hidden");
+		}
 
 		function render() {
 			tbody.innerHTML = "";
@@ -131,15 +133,15 @@
 				const tr = document.createElement("tr");
 				tr.className = "hover:bg-gray-50 dark:hover:bg-gray-800 transition";
 				tr.innerHTML = `
-          <td class="px-8 py-6 font-medium">#${t.id}</td>
-          <td class="px-8 py-6 max-w-2xl">${t.title}</td>
-          <td class="px-8 py-6">
-            <span class="${t.is_duplicate ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'} px-4 py-2 rounded-full text-sm font-medium">
-              ${t.is_duplicate ? 'Duplicate' : 'Unique'}
-            </span>
-          </td>
-          <td class="px-8 py-6 text-gray-500">${new Date(t.created_at).toLocaleDateString()}</td>
-        `;
+					<td class="px-8 py-6 font-medium">#${t.id}</td>
+					<td class="px-8 py-6 max-w-2xl">${t.title}</td>
+					<td class="px-8 py-6">
+						<span class="${t.is_duplicate ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'} px-4 py-2 rounded-full text-sm font-medium">
+							${t.is_duplicate ? 'Duplicate' : 'Unique'}
+						</span>
+					</td>
+					<td class="px-8 py-6 text-gray-500">${new Date(t.created_at).toLocaleDateString()}</td>
+				`;
 				tbody.appendChild(tr);
 			});
 		}
@@ -154,8 +156,18 @@
 			document.getElementById("clusters").textContent = new Set(allTitles.filter(t => t.is_duplicate).map(t => t.normalized_title)).size;
 		}
 
-		showAllBtn.onclick = () => { showOnlyUnique = false; showAllBtn.classList.add("bg-blue-600", "text-white"); showUniqueBtn.classList.remove("bg-blue-600", "text-white"); render(); };
-		showUniqueBtn.onclick = () => { showOnlyUnique = true; showUniqueBtn.classList.add("bg-blue-600", "text-white"); showAllBtn.classList.remove("bg-blue-600", "text-white"); render(); };
+		showAllBtn.onclick = () => {
+			showOnlyUnique = false;
+			showAllBtn.classList.add("bg-blue-600", "text-white");
+			showUniqueBtn.classList.remove("bg-blue-600", "text-white");
+			render();
+		};
+		showUniqueBtn.onclick = () => {
+			showOnlyUnique = true;
+			showUniqueBtn.classList.add("bg-blue-600", "text-white");
+			showAllBtn.classList.remove("bg-blue-600", "text-white");
+			render();
+		};
 		searchInput.oninput = () => setTimeout(render, 300);
 
 		loadTitles();

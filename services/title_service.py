@@ -32,6 +32,7 @@ def check_duplicate(db: Session, item, threshold: float = 0.85):
     clean = clean_text(raw)
     new_vec = get_embedding(clean)
     best_score = 0.0
+    best_match_id = None  # Track the ID of the best match
 
     for row in db.query(Title).all():
         if not row.embedding:
@@ -44,14 +45,18 @@ def check_duplicate(db: Session, item, threshold: float = 0.85):
             score = float(cosine_similarity([new_vec], [stored_vec])[0][0])
             if score > best_score:
                 best_score = score
+                best_match_id = row.id  # Update best match ID
         except:
             continue
 
-    # FIXED: Convert numpy types to native Python types
     is_duplicate = bool(best_score >= threshold)
     score = round(float(best_score), 3)
 
-    return {"duplicate": is_duplicate, "score": score}
+    return {
+        "duplicate": is_duplicate,
+        "score": score,
+        "id": best_match_id if is_duplicate else None
+    }
 
 
 def find_similar_titles(db: Session, item, threshold: float = 0.75):
