@@ -1,53 +1,125 @@
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
-from sqlalchemy.orm import Session
-from io import BytesIO
+from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
+import os
 import pandas as pd
+import numpy as np
+import hashlib
 
-from database.database import get_db
-from services.title_service import process_bulk_titles
+from database.database import SessionLocal
+from models.title import Title
+from models.bulk_upload_run import BulkUploadRun
+from services.excel_deduper import dedupe_excel
+from services.embedding_service import get_embedding
 
-router = APIRouter()
+router = APIRouter(prefix="/excel", tags=["Excel"])
 
-@router.post("/upload-excel")
-async def upload_excel(
-    file: UploadFile = File(...),
-    page: int = 1,
-    limit: int = 20,
-    details: bool = True,
-    db: Session = Depends(get_db),
-):
-    # read uploaded file
-    contents = await file.read()
+TEMP_DIR = "./temp"
 
-    # parse excel file
+
+def hash_file(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def process_file_bulk_bg(file_path: str, filename: str):
+    db = SessionLocal()
     try:
-        df = pd.read_excel(BytesIO(contents))
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid Excel file")
+        file_hash = hash_file(file_path)
 
-    # verify required column
-    if "title" not in df.columns:
-        raise HTTPException(status_code=400, detail="'title' column missing")
+        existing_run = (
+            db.query(BulkUploadRun)
+            .filter(BulkUploadRun.file_hash == file_hash)
+            .first()
+        )
 
-    # run main Bulk Processing Engine
-    summary = process_bulk_titles(db, df)
+        if existing_run:
+            print("Duplicate file upload skipped:", filename)
+            return
 
-    all_details = summary.get("details", [])
+        df = pd.read_excel(file_path)
 
-    # pagination / detail toggling
-    if details:
-        start = (page - 1) * limit
-        end = start + limit
-        paginated = all_details[start:end]
-    else:
-        paginated = []
+        unique_df, clusters = dedupe_excel(
+            df,
+            column="title",
+            ignore_numbers=True
+        )
+
+        existing_norms = {
+            r[0] for r in db.query(Title.normalized_title).all()
+        }
+
+        saved = 0
+
+        for _, row in unique_df.iterrows():
+            normalized = row["normalized"]
+
+            if normalized in existing_norms:
+                continue
+
+            vec = get_embedding(normalized)
+            vec_bytes = np.array(vec, dtype=np.float32).tobytes()
+
+            db.add(
+                Title(
+                    title=row["title"],
+                    normalized_title=normalized,
+                    embedding=vec_bytes,
+                    is_duplicate=0
+                )
+            )
+
+            existing_norms.add(normalized)
+            saved += 1
+
+        run = BulkUploadRun(
+            filename=filename,
+            file_hash=file_hash,
+            processed=len(df),
+            saved=saved,
+            duplicates=len(df) - saved,
+        )
+
+        db.add(run)
+        db.commit()
+
+        print({
+            "file": filename,
+            "processed": len(df),
+            "saved": saved,
+            "duplicates": len(df) - saved,
+            "clusters": {k: v for k, v in clusters.items() if len(v) > 1}
+        })
+
+    finally:
+        db.close()
+
+
+@router.post("/bulk-upload")
+async def bulk_upload(
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+):
+    if not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(
+            status_code=400,
+            detail="Only Excel files (.xlsx, .xls) are allowed"
+        )
+
+    os.makedirs(TEMP_DIR, exist_ok=True)
+    temp_path = os.path.join(TEMP_DIR, file.filename)
+
+    with open(temp_path, "wb") as f:
+        f.write(await file.read())
+
+    background_tasks.add_task(
+        process_file_bulk_bg,
+        temp_path,
+        file.filename
+    )
 
     return {
-        "processed": summary["processed"],
-        "saved": summary["saved"],
-        "duplicates": summary["duplicates"],
-        "total_details": len(all_details),
-        "page": page,
-        "limit": limit,
-        "details": paginated,
+        "status": "processing",
+        "filename": file.filename
     }

@@ -16,6 +16,11 @@ SessionLocal = sessionmaker(
 
 Base = declarative_base()
 
+# 🔽 IMPORTANT: force model registration
+# Without these imports, tables will NEVER be created
+from models.title import Title
+from models.bulk_upload_run import BulkUploadRun 
+
 
 def get_db():
     db = SessionLocal()

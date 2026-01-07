@@ -1,9 +1,10 @@
 # routes/admin_routes.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+
 from database.database import get_db
 from models.title import Title
-from sqlalchemy import func
 
 router = APIRouter()
 
@@ -12,23 +13,33 @@ router = APIRouter()
 def stats(db: Session = Depends(get_db)):
     total = db.query(func.count(Title.id)).scalar()
 
-    dup_count = db.query(func.count(Title.id))\
-        .filter(Title.is_duplicate == 1)\
+    dup_count = (
+        db.query(func.count(Title.id))
+        .filter(Title.is_duplicate == 1)
         .scalar()
+    )
 
     unique = total - dup_count
 
     avg_len = db.query(func.avg(func.length(Title.title))).scalar() or 0
 
     top_norm = (
-        db.query(Title.normalized_title, func.count(Title.id).label("cnt"))
+        db.query(
+            Title.normalized_title,
+            func.count(Title.id).label("cnt")
+        )
         .group_by(Title.normalized_title)
         .order_by(func.count(Title.id).desc())
         .limit(10)
         .all()
     )
 
-    recent = db.query(Title).order_by(Title.created_at.desc()).limit(10).all()
+    recent = (
+        db.query(Title)
+        .order_by(Title.created_at.desc())
+        .limit(10)
+        .all()
+    )
 
     return {
         "total": total,
@@ -36,7 +47,8 @@ def stats(db: Session = Depends(get_db)):
         "unique": unique,
         "avg_title_length": float(avg_len),
         "top_normalized": [
-            {"normalized": n, "count": c} for n, c in top_norm
+            {"normalized": n, "count": c}
+            for n, c in top_norm
         ],
         "recent": [
             {
@@ -47,17 +59,3 @@ def stats(db: Session = Depends(get_db)):
             for r in recent
         ],
     }
-
-@router.get("/titles")
-def api_get_titles(db: Session = Depends(get_db)):
-    titles = db.query(Title).order_by(Title.created_at.desc()).limit(200).all()
-    return [
-        {
-            "id": t.id,
-            "title": t.title,
-            "status": "duplicate" if t.is_duplicate else "unique",
-            "similarity_score": 0.0,
-            "created_at": t.created_at.isoformat()
-        }
-        for t in titles
-    ]
