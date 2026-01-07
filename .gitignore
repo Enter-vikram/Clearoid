@@ -1,16 +1,28 @@
+# ======================
 # Python
+# ======================
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+
+# Virtual environments
 venv/
 env/
+
+# Databases
+*.db
 *.sqlite3
 
-# VS Code
-.vscode/
+# Runtime / temp files
+temp/
 
-# MacOS
-.DS_Store
-
+# Environment variables
 .env
+
+# ======================
+# Editors & OS
+# ======================
+.vscode/
+.DS_Store
