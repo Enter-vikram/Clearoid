@@ -3,16 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, RedirectResponse
 from dotenv import load_dotenv
-import os
 import logging
 
 # -------------------------------------------------
 # ENV
 # -------------------------------------------------
+# Always load .env safely
 load_dotenv()
-
-API_KEY = os.getenv("API_KEY")
-DATABASE_URL = os.getenv("DATABASE_URL")
 
 # -------------------------------------------------
 # LOGGER
@@ -28,7 +25,9 @@ logger = logging.getLogger("clearoid")
 # -------------------------------------------------
 from database.database import Base, engine
 
-# IMPORTANT: import ALL models before create_all
+# ⚠️ IMPORTANT
+# Import ALL models BEFORE create_all
+# Otherwise tables will NOT be created
 import models.title
 import models.bulk_upload_run
 
@@ -51,11 +50,11 @@ app = FastAPI(
 )
 
 # -------------------------------------------------
-# CORS
+# CORS (frontend safe)
 # -------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],      # tighten later if needed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -69,36 +68,50 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.exception("Unhandled exception")
     return JSONResponse(
         status_code=500,
-        content={"success": False, "detail": "Internal server error"},
+        content={
+            "success": False,
+            "detail": "Internal server error"
+        },
     )
 
 # -------------------------------------------------
-# 🔧 LEGACY ROUTE SAFETY (FIXES 405 ERRORS)
+# LEGACY ROUTE SAFETY (FIXES 405 ERRORS)
 # -------------------------------------------------
-# These catch OLD calls like /submit and /check-duplicate
-# and forward them to the real /api/* endpoints
+# Old frontend / API calls safety net
 
 @app.post("/submit")
 async def legacy_submit_redirect():
-    return RedirectResponse(url="/api/submit", status_code=307)
+    return RedirectResponse(
+        url="/api/submit",
+        status_code=307
+    )
 
 @app.post("/check-duplicate")
 async def legacy_check_duplicate_redirect():
-    return RedirectResponse(url="/api/check-duplicate", status_code=307)
+    return RedirectResponse(
+        url="/api/check-duplicate",
+        status_code=307
+    )
 
 # -------------------------------------------------
-# ROUTER REGISTRATION (CRITICAL)
+# ROUTER REGISTRATION (ORDER MATTERS)
 # -------------------------------------------------
-# title_routes already has prefix="/api"
-# excel_routes already has prefix="/excel"
+# title_routes -> prefix="/api"
+# excel_routes -> prefix="/excel"
+# admin_routes -> prefix="/admin"
 
 app.include_router(title_router)
 app.include_router(excel_router)
 app.include_router(admin_router, prefix="/admin", tags=["Admin"])
 
 # -------------------------------------------------
-# FRONTEND
+# FRONTEND (STATIC FILES)
 # -------------------------------------------------
+# Serves:
+# /index.html
+# /upload.html
+# /history.html
+# /export.html
 app.mount(
     "/",
     StaticFiles(directory="frontend", html=True),

@@ -1,4 +1,5 @@
 # routes/admin_routes.py
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -21,12 +22,16 @@ def stats(db: Session = Depends(get_db)):
 
     unique = total - dup_count
 
-    avg_len = db.query(func.avg(func.length(Title.title))).scalar() or 0
+    avg_len = (
+        db.query(func.avg(func.length(Title.title)))
+        .scalar()
+        or 0
+    )
 
     top_norm = (
         db.query(
             Title.normalized_title,
-            func.count(Title.id).label("cnt")
+            func.count(Title.id).label("cnt"),
         )
         .group_by(Title.normalized_title)
         .order_by(func.count(Title.id).desc())
