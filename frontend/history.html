@@ -8,9 +8,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class'
-    }
+    tailwind.config = { darkMode: 'class' }
   </script>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -60,14 +58,6 @@
       border: 1px solid #e5e7eb;
     }
 
-    .score-info {
-      color: #6b7280;
-      cursor: help;
-      font-size: 0.9rem;
-      margin-left: 0.25rem;
-    }
-
-    /* Action Buttons */
     .action-btn {
       padding: 0.625rem 1rem;
       border-radius: 9999px;
@@ -80,9 +70,8 @@
     }
 
     .export-selected-btn {
-      background: #fb7185; /* softer red */
+      background: #fb7185;
       color: white;
-      transition: background 0.2s;
     }
     .export-selected-btn:hover {
       background: #f43f5e;
@@ -96,7 +85,6 @@
       background: #dc2626;
     }
 
-    /* Modals */
     .action-modal-overlay {
       position: fixed;
       inset: 0;
@@ -161,7 +149,6 @@
       box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
     }
 
-    /* Inline delete options */
     .delete-options {
       position: absolute;
       top: 100%;
@@ -191,7 +178,6 @@
       background: #f3f4f6;
     }
 
-    /* Prevent overlapping on small screens */
     @media (max-width: 640px) {
       .action-btn {
         padding: 0.5rem 0.75rem;
@@ -200,11 +186,21 @@
         margin-top: 0.5rem;
       }
     }
+
+    /* Toast animation */
+    @keyframes fadeInOut {
+      0%   { opacity: 0; transform: translateY(20px); }
+      10%  { opacity: 1; transform: translateY(0); }
+      90%  { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(20px); }
+    }
+    .toast {
+      animation: fadeInOut 3s forwards;
+    }
   </style>
 </head>
 
 <body class="bg-gray-50 dark:bg-black min-h-screen flex flex-col">
-  <!-- HEADER -->
   <header class="sticky-top">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
       <div class="text-3xl font-bold text-white tracking-tight">Clearoid</div>
@@ -214,7 +210,7 @@
     </div>
   </header>
 
-  <!-- EXPORT MODAL -->
+  <!-- Export Modal -->
   <div id="exportModal" class="action-modal-overlay" onclick="closeActionModal(event, 'exportModal')">
     <div class="action-modal" onclick="event.stopPropagation()">
       <h2 class="text-2xl font-bold mb-6">Export Options</h2>
@@ -225,7 +221,7 @@
     </div>
   </div>
 
-  <!-- DELETE MODAL -->
+  <!-- Delete Modal -->
   <div id="deleteModal" class="action-modal-overlay" onclick="closeActionModal(event, 'deleteModal')">
     <div class="action-modal" onclick="event.stopPropagation()">
       <h2 class="text-2xl font-bold mb-6">Delete Options</h2>
@@ -235,16 +231,13 @@
     </div>
   </div>
 
-  <!-- MAIN CONTENT -->
   <main class="flex-grow p-6">
     <div class="max-w-7xl mx-auto">
-      <!-- TABS -->
       <div class="flex justify-center gap-4 mb-10">
         <button id="tabHistory" class="tab active" onclick="showHistory()">Submission record</button>
         <button id="tabReview" class="tab" onclick="showReview()">Submission review</button>
       </div>
 
-      <!-- HISTORY SECTION -->
       <div id="historySection">
         <div class="relative text-center mb-8">
           <div class="absolute right-0 top-0">
@@ -259,7 +252,6 @@
           <p class="mt-3 text-gray-500 dark:text-gray-400">Semantic duplicate detection</p>
         </div>
 
-        <!-- STATS -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div class="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow text-center">
             <div id="statTotal" class="text-3xl font-bold text-blue-600">0</div>
@@ -279,7 +271,6 @@
           </div>
         </div>
 
-        <!-- CONTROLS -->
         <div class="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow mb-8 space-y-5">
           <div class="flex flex-wrap gap-3 items-center">
             <button onclick="setFilter('all')" class="px-5 py-2.5 rounded-full bg-blue-600 text-white text-sm font-medium">All</button>
@@ -287,14 +278,14 @@
             <button onclick="setFilter('duplicate')" class="px-5 py-2.5 rounded-full bg-gray-100 dark:bg-gray-800 text-sm font-medium">Only Duplicate</button>
             <div class="flex items-center gap-3 ml-auto">
               <label class="text-sm text-gray-600 dark:text-gray-400">Threshold:</label>
-              <input type="number" id="threshold" min="0" max="1" step="0.01" value="0.85" class="border rounded-lg px-3 py-2 text-sm w-24 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+              <input type="number" id="threshold" min="0" max="1" step="0.01" value="0.85"
+                     class="border rounded-lg px-3 py-2 text-sm w-24 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
             </div>
-            <input id="search" oninput="applyUIState()" placeholder="Search titles…" class="border rounded-full px-4 py-2 w-64 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+            <input id="search" oninput="applyUIState()" placeholder="Search titles…"
+                   class="border rounded-full px-4 py-2 w-64 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
           </div>
 
-          <!-- ACTION BUTTONS ROW – FIXED OVERLAP -->
           <div class="flex flex-wrap gap-4 mt-4 items-center relative min-h-[48px]">
-            <!-- Delete Trash Icon Only -->
             <div class="relative">
               <button id="deleteIconBtn" class="action-btn bg-red-600 hover:bg-red-700 text-white rounded-full p-3">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,20 +293,17 @@
                 </svg>
               </button>
 
-              <!-- Inline Delete Options -->
               <div id="deleteOptions" class="delete-options">
                 <button onclick="enableSelectMode('delete'); document.getElementById('deleteOptions').classList.remove('show')" class="delete-option">Select & Delete</button>
                 <button onclick="deleteAllCurrent(); document.getElementById('deleteOptions').classList.remove('show')" class="delete-option">Delete All (Current Filter)</button>
               </div>
             </div>
 
-            <!-- Export Selected Button -->
             <button id="exportSelectedBtn" onclick="exportSelected()" class="action-btn export-selected-btn hidden flex items-center gap-2 px-5 py-2.5 rounded-full">
               Export Selected
               <span onclick="event.stopPropagation(); disableSelectMode()" class="text-xl font-bold cursor-pointer hover:text-red-200">×</span>
             </button>
 
-            <!-- Delete Selected Button (if needed) -->
             <button id="deleteSelectedBtn" onclick="deleteSelected()" class="action-btn delete-selected-btn hidden flex items-center gap-2 px-5 py-2.5 rounded-full">
               Delete Selected
               <span onclick="event.stopPropagation(); disableSelectMode()" class="text-xl font-bold cursor-pointer hover:text-red-200">×</span>
@@ -323,7 +311,6 @@
           </div>
         </div>
 
-        <!-- TABLE -->
         <div class="bg-white dark:bg-gray-900 rounded-2xl shadow overflow-hidden">
           <table class="w-full">
             <thead class="bg-gray-100 dark:bg-gray-800 text-left">
@@ -342,7 +329,6 @@
         </div>
       </div>
 
-      <!-- CLUSTER VIEW SECTION -->
       <div id="reviewSection" class="hidden">
         <div class="text-center mb-10">
           <h1 class="text-5xl font-bold text-gray-900 dark:text-white">Cluster View</h1>
@@ -353,29 +339,29 @@
     </div>
   </main>
 
-  <!-- FOOTER -->
+  <!-- Footer -->
   <footer class="bg-black text-gray-400 pt-12 pb-10">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
         <div>
-          <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">Product</h3>
+          <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">PRODUCT</h3>
           <ul class="space-y-3 text-base">
-            <li><a href="/" class="hover:text-white transition">Home</a></li>
-            <li><a href="/upload.html" class="hover:text-white transition">Upload</a></li>
-            <li><a href="/history.html" class="hover:text-white transition">History</a></li>
-            <li><a href="/export.html" class="hover:text-white transition">Export</a></li>
+            <li><a href="index.html" class="hover:text-white transition">Home</a></li>
+            <li><a href="upload.html" class="hover:text-white transition">Upload</a></li>
+            <li><a href="history.html" class="hover:text-white transition">History</a></li>
+            <li><a href="export.html" class="hover:text-white transition">Export</a></li>
           </ul>
         </div>
         <div>
-          <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">Company</h3>
+          <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">COMPANY</h3>
           <ul class="space-y-3 text-base">
             <li><a href="#" class="hover:text-white transition">Contact us</a></li>
             <li><a href="#" class="hover:text-white transition">Feedback</a></li>
           </ul>
         </div>
         <div>
-          <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">Social</h3>
-          <div class="flex gap-8 items-center text-4xl">
+          <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">SOCIAL</h3>
+          <div class="flex gap-8 items-center text-4xl justify-center md:justify-start">
             <a href="#" class="hover:text-white transition duration-200">𝕏</a>
             <a href="#" class="hover:text-white transition duration-200">LinkedIn</a>
             <a href="#" class="text-xl font-medium hover:text-white transition duration-200 flex items-center gap-3">
@@ -387,6 +373,7 @@
           </div>
         </div>
       </div>
+
       <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center text-sm gap-6">
         <select class="bg-gray-900 border border-gray-700 rounded-full px-5 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>English</option>
@@ -401,7 +388,7 @@
     </div>
   </footer>
 
-  <!-- AUTH MODAL -->
+  <!-- Auth Modal -->
   <div id="authModal" class="modal-overlay" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <div class="flex justify-between items-center mb-8">
@@ -409,23 +396,26 @@
         <button type="button" class="close-btn text-gray-400 hover:text-white text-4xl font-bold" onclick="closeModal(event)">×</button>
       </div>
       <p class="text-gray-400 text-center mb-10" id="modalSubtitle">Get access to your account</p>
+
       <form class="space-y-6">
         <div class="relative">
           <input type="email" id="email" placeholder=" " class="w-full px-6 py-5 text-lg bg-transparent border border-gray-700 rounded-xl focus:outline-none focus:border-[#007aff] focus:ring-2 focus:ring-[#007aff]/30 transition peer" />
-          <label for="email" class="absolute left-6 top-5 text-gray-400 text-lg pointer-events-none transition-all peer-focus:top-2 peer-focus:text-sm peer-focus:text-[#007aff] peer-placeholder-shown:top-5 peer-placeholder-shown:text-lg">Email</label>
+          <label for="email" class="absolute left-6 top-5 text-gray-400 text-lg pointer-events-none transition-all peer-focus:top-2 peer-focus:text-sm peer-focus:text-[#007aff]">Email</label>
         </div>
         <div class="relative">
           <input type="password" id="password" placeholder=" " class="w-full px-6 py-5 text-lg bg-transparent border border-gray-700 rounded-xl focus:outline-none focus:border-[#007aff] focus:ring-2 focus:ring-[#007aff]/30 transition peer" />
-          <label for="password" class="absolute left-6 top-5 text-gray-400 text-lg pointer-events-none transition-all peer-focus:top-2 peer-focus:text-sm peer-focus:text-[#007aff] peer-placeholder-shown:top-5 peer-placeholder-shown:text-lg">Password</label>
+          <label for="password" class="absolute left-6 top-5 text-gray-400 text-lg pointer-events-none transition-all peer-focus:top-2 peer-focus:text-sm peer-focus:text-[#007aff]">Password</label>
         </div>
         <button type="submit" class="w-full bg-[#007aff] text-white font-medium py-5 rounded-full hover:bg-[#0066cc] transition shadow-lg text-lg">
           Sign in
         </button>
       </form>
+
       <div class="relative my-8">
         <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-700"></div></div>
         <div class="relative flex justify-center text-sm"><span class="px-4 bg-gray-900/60 text-gray-400">or</span></div>
       </div>
+
       <div class="space-y-4">
         <button class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-5 rounded-full transition flex items-center justify-center gap-3 text-lg border border-gray-700">
           <span class="text-xl">G</span> Continue with Google
@@ -434,92 +424,134 @@
           <span class="text-xl">𝕏</span> Continue with X
         </button>
       </div>
-      <p class="text-center text-gray-500 mt-10 text-sm">
-        Don't have an account? <button type="button" onclick="switchModal('signup')" class="text-[#007aff] hover:underline font-medium">Sign up</button>
-      </p>
     </div>
   </div>
 
   <script>
+    // ──────────────────────────────────────────────
+    // STATE
+    // ──────────────────────────────────────────────
     let rawData = [];
     let filter = "all";
     let selectMode = false;
-    let modeType = null; // 'export' or 'delete'
+    let modeType = null;
 
-    // Mock data for testing
-    rawData = [
-      { id: 1, title: "Sample title number", status: "unique", cluster: "cluster1", similarityScore: 1.00 },
-      { id: 2, title: "Rita", status: "unique", cluster: "cluster2", similarityScore: 1.00 },
-      { id: 3, title: "Hashtag", status: "unique", cluster: "cluster3", similarityScore: 1.00 },
-      { id: 4, title: "hey title number 77", status: "duplicate", cluster: "cluster1", similarityScore: 0.92 },
-      { id: 5, title: "Hello world", status: "unique", cluster: "cluster4", similarityScore: 1.00 },
-      { id: 6, title: "Greetings planet", status: "duplicate", cluster: "cluster1", similarityScore: 0.88 },
-      { id: 7, title: "Random repeated entry", status: "duplicate", cluster: "cluster1", similarityScore: 0.85 }
-    ];
+    // ──────────────────────────────────────────────
+    // LOAD DATA
+    // ──────────────────────────────────────────────
+    async function loadHistoryFromAPI() {
+      try {
+        const res = await fetch("/api/history", { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    // Initial render
-    applyUIState();
-    renderStats();
+        const json = await res.json();
 
+        rawData = json.data.map(r => ({
+          id: r.id,
+          title: r.title || "(no title)",
+          status: r.status || "unique",
+          cluster: r.cluster || "no-cluster",
+          similarityScore: Number(r.similarityScore ?? 1.0),
+          created_at: r.created_at
+        }));
+
+        document.getElementById("statTotal").textContent = json.total ?? rawData.length;
+        document.getElementById("statUnique").textContent = json.unique ?? rawData.filter(r => r.status === "unique").length;
+        document.getElementById("statDup").textContent = json.duplicates ?? rawData.filter(r => r.status === "duplicate").length;
+        document.getElementById("statClusters").textContent = json.clusters ?? new Set(rawData.map(r => r.cluster)).size;
+
+        applyUIState();
+      } catch (err) {
+        console.error("Failed to load history:", err);
+        document.getElementById("tbody").innerHTML = `
+          <tr><td colspan="5" class="p-12 text-center text-red-600">
+            Failed to load data<br><small>${err.message}</small>
+          </td></tr>`;
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    // UI LOGIC
+    // ──────────────────────────────────────────────
     function applyUIState() {
-      const q = document.getElementById("search")?.value.toLowerCase() || "";
-      const filtered = rawData
-        .filter(r => filter === "all" || r.status === filter)
-        .filter(r => r.title.toLowerCase().includes(q));
+      const q = (document.getElementById("search")?.value || "").toLowerCase().trim();
+      const threshold = Number(document.getElementById("threshold")?.value) || 0.85;
+
+      let filtered = rawData;
+
+      // 1. Status filter
+      if (filter !== "all") {
+        filtered = filtered.filter(r => r.status === filter);
+      }
+
+      // 2. Search
+      if (q) {
+        filtered = filtered.filter(r => r.title.toLowerCase().includes(q));
+      }
+
+      // 3. Similarity threshold (for duplicates only)
+      if (filter === "duplicate") {
+        filtered = filtered.filter(r => r.similarityScore <= threshold);
+      }
 
       renderTable(filtered);
-      renderStats();
-
-      document.getElementById("checkboxHeader").style.display = selectMode ? "" : "none";
-      document.getElementById("exportSelectedBtn").classList.toggle("hidden", !(selectMode && modeType === "export"));
-      document.getElementById("deleteSelectedBtn").classList.toggle("hidden", !(selectMode && modeType === "delete"));
+      updateSelectionUI();
     }
 
     function renderTable(rows) {
       const tbody = document.getElementById("tbody");
       tbody.innerHTML = "";
-      rows.forEach(r => {
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="p-12 text-center text-gray-500 dark:text-gray-400">
+              No matching records found
+            </td>
+          </tr>`;
+        return;
+      }
+
+      rows.forEach(row => {
         const tr = document.createElement("tr");
-        tr.className = "border-b dark:border-gray-800";
+        tr.className = "border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors";
+
         tr.innerHTML = `
           <td class="p-4 w-12" style="display:${selectMode ? '' : 'none'};">
-            <input type="checkbox" class="select-checkbox" data-id="${r.id}">
+            <input type="checkbox" class="select-checkbox h-4 w-4 rounded border-gray-300" data-id="${row.id}">
           </td>
-          <td class="p-4">#${r.id}</td>
-          <td class="p-4 font-medium">${r.title}</td>
+          <td class="p-4 font-mono text-sm text-gray-600 dark:text-gray-400">#${row.id}</td>
+          <td class="p-4 font-medium text-gray-900 dark:text-white">${row.title}</td>
           <td class="p-4">
-            <span class="badge ${r.status === 'unique' ? 'primary' : 'duplicate'}">
-              ${r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+            <span class="badge ${row.status === 'unique' ? 'primary' : 'duplicate'}">
+              ${row.status.charAt(0).toUpperCase() + row.status.slice(1)}
             </span>
           </td>
-          <td class="p-4 text-right space-x-3">
-            <button onclick="editRow(${r.id})" class="text-blue-600 hover:underline">Edit</button>
-            <button onclick="deleteRow(${r.id})" class="text-red-600 hover:underline">Delete</button>
+          <td class="p-4 text-right space-x-4">
+            <button onclick="editRow(${row.id})" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">Edit</button>
+            <button onclick="deleteRow(${row.id})" class="text-red-600 hover:text-red-800 dark:text-red-400">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    function renderStats() {
-      const total = rawData.length;
-      const unique = rawData.filter(r => r.status === "unique").length;
-      const dup = total - unique;
-      const clusters = new Set(rawData.map(r => r.cluster)).size;
-
-      document.getElementById("statTotal").textContent = total;
-      document.getElementById("statUnique").textContent = unique;
-      document.getElementById("statDup").textContent = dup;
-      document.getElementById("statClusters").textContent = clusters;
+    function updateSelectionUI() {
+      document.getElementById("checkboxHeader").style.display = selectMode ? "" : "none";
+      document.getElementById("exportSelectedBtn").classList.toggle("hidden", !(selectMode && modeType === "export"));
+      document.getElementById("deleteSelectedBtn").classList.toggle("hidden", !(selectMode && modeType === "delete"));
     }
 
-    function toggleSelectAll() {
-      const checked = document.getElementById("selectAll").checked;
-      document.querySelectorAll(".select-checkbox").forEach(cb => cb.checked = checked);
-    }
-
-    function setFilter(f) {
-      filter = f;
+    // ──────────────────────────────────────────────
+    // FILTER & SELECTION
+    // ──────────────────────────────────────────────
+    function setFilter(newFilter) {
+      filter = newFilter;
+      document.querySelectorAll('[onclick^="setFilter"]').forEach(btn => {
+        const active = btn.getAttribute("onclick") === `setFilter('${newFilter}')`;
+        btn.classList.toggle("bg-blue-600", active);
+        btn.classList.toggle("text-white", active);
+      });
       applyUIState();
     }
 
@@ -538,119 +570,149 @@
       applyUIState();
     }
 
+    function toggleSelectAll() {
+      const checked = document.getElementById("selectAll").checked;
+      document.querySelectorAll(".select-checkbox").forEach(cb => cb.checked = checked);
+    }
+
     function getSelectedIds() {
       return Array.from(document.querySelectorAll(".select-checkbox:checked"))
         .map(cb => parseInt(cb.dataset.id));
     }
 
-    // Export
     function exportUnique() {
       window.location.href = "/export.html?type=unique";
     }
-
+    
     function exportAll() {
       window.location.href = "/export.html?type=all";
     }
-
+    
     function exportSelected() {
-      const selected = getSelectedIds();
-      if (selected.length === 0) {
-        alert("Please select at least one item to export.");
+      const ids = getSelectedIds();
+      if (ids.length === 0) {
+        alert("Please select at least one item first");
         return;
       }
-      window.location.href = `/export.html?type=selected&ids=${selected.join(',')}`;
+      window.location.href = `/export.html?type=selected&ids=${ids.join(',')}`;
     }
 
-    // Delete
-    function deleteSelected() {
+    
+    // ──────────────────────────────────────────────
+    // DELETE FUNCTIONS
+    // ──────────────────────────────────────────────
+    async function deleteSelected() {
       const selected = getSelectedIds();
-      if (selected.length === 0) {
-        alert("Please select at least one item to delete.");
-        return;
+      if (selected.length === 0) return alert("No items selected");
+
+      if (!confirm(`Delete ${selected.length} selected item(s)?`)) return;
+
+      try {
+        const res = await fetch("/api/titles/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(selected)
+        });
+
+        if (!res.ok) throw new Error("Delete failed");
+
+        rawData = rawData.filter(r => !selected.includes(r.id));
+        disableSelectMode();
+        applyUIState();
+        showToast(`${selected.length} item(s) deleted`);
+      } catch (err) {
+        alert("Failed to delete items");
       }
-      if (!confirm(`Delete ${selected.length} selected item(s)? This cannot be undone.`)) return;
-
-      rawData = rawData.filter(r => !selected.includes(r.id));
-      disableSelectMode();
-      applyUIState();
-      alert(`${selected.length} item(s) deleted.`);
     }
 
-    function deleteAllCurrent() {
-      const count = rawData.filter(r => filter === "all" || r.status === filter).length;
-      if (count === 0 || !confirm(`Delete all ${filter === 'all' ? 'entries' : filter + ' entries'} (${count})?`)) return;
+    async function deleteAllCurrent() {
+      const ids = rawData
+        .filter(r => filter === "all" || r.status === filter)
+        .map(r => r.id);
 
-      rawData = rawData.filter(r => !(filter === "all" || r.status === filter));
-      applyUIState();
-      alert("All matching items deleted.");
+      if (ids.length === 0) return;
+      if (!confirm(`Delete ${ids.length} ${filter === 'all' ? 'entries' : filter + ' entries'}?`)) return;
+
+      try {
+        const res = await fetch("/api/titles/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(ids)
+        });
+
+        if (!res.ok) throw new Error("Bulk delete failed");
+
+        rawData = rawData.filter(r => !ids.includes(r.id));
+        applyUIState();
+        showToast(`Deleted ${ids.length} items`);
+      } catch (err) {
+        alert("Failed to delete items");
+      }
     }
 
-    function deleteRow(id) {
+    async function deleteRow(id) {
       if (!confirm("Delete this entry?")) return;
-      rawData = rawData.filter(r => r.id !== id);
-      applyUIState();
+
+      try {
+        const res = await fetch(`/api/title/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Delete failed");
+
+        rawData = rawData.filter(r => r.id !== id);
+        applyUIState();
+        showToast("Entry deleted");
+      } catch (err) {
+        alert("Failed to delete entry");
+      }
     }
 
     function editRow(id) {
-      alert(`Edit feature for ID ${id} coming soon!`);
+      alert(`Edit entry #${id} - feature coming soon`);
     }
 
-    // Cluster View Rendering
+    // ──────────────────────────────────────────────
+    // CLUSTER VIEW
+    // ──────────────────────────────────────────────
     function renderReview() {
       const container = document.getElementById("clusterView");
       container.innerHTML = "";
 
-      const clusters = rawData.reduce((acc, r) => {
-        if (!acc[r.cluster]) acc[r.cluster] = [];
-        acc[r.cluster].push(r);
+      const clusters = rawData.reduce((acc, item) => {
+        if (!acc[item.cluster]) acc[item.cluster] = [];
+        acc[item.cluster].push(item);
         return acc;
       }, {});
 
       if (Object.keys(clusters).length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500 mt-20 text-2xl">No clusters found yet.</p>`;
+        container.innerHTML = '<p class="text-center text-gray-500 mt-20 text-2xl">No clusters found yet.</p>';
         return;
       }
 
       Object.entries(clusters)
-        .sort((a, b) => b[1].length - a[1].length)
+        .sort(([,a], [,b]) => b.length - a.length)
         .forEach(([clusterId, items], index) => {
-          const primary = items.find(i => i.status === "unique") || items[0];
-          const duplicates = items.filter(i => i.id !== primary.id);
-
-          const titleCounts = {};
-          items.forEach(i => titleCounts[i.title] = (titleCounts[i.title] || 0) + 1);
-          const [topTitle, repeats] = Object.entries(titleCounts)
-            .sort((a, b) => b[1] - a[1])[0] || ["", 0];
-
           const card = document.createElement("div");
           card.className = "cluster-card dark:bg-gray-900";
           card.innerHTML = `
-            <h2 class="text-2xl font-bold mb-3">Cluster #${index + 1}</h2>
+            <h2 class="text-2xl font-bold mb-4">Cluster #${index + 1}</h2>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
-              Topic: ${primary.title} · ${items.length} similar submission${items.length > 1 ? 's' : ''}
+              ${items.length} item${items.length !== 1 ? 's' : ''} • ${clusterId}
             </p>
-            <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-xl mb-6 border border-gray-200 dark:border-gray-700">
-              <div class="flex justify-between items-center">
-                <span class="font-medium text-lg">${primary.title}</span>
-                <span class="badge primary">Primary</span>
-              </div>
-            </div>
             <div class="space-y-4">
-              ${duplicates.map(i => `
-                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+              ${items.map(item => `
+                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                   <div class="flex justify-between items-start">
                     <div>
-                      <p class="font-medium">${i.title}</p>
-                      <p class="text-sm text-gray-500 mt-1">Similarity: ${(i.similarityScore || 0.85).toFixed(2)}</p>
+                      <p class="font-medium">${item.title}</p>
+                      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Status: ${item.status} • Similarity: ${(item.similarityScore || 1).toFixed(3)}
+                      </p>
                     </div>
+                    <span class="badge ${item.status === 'unique' ? 'primary' : 'duplicate'}">
+                      ${item.status}
+                    </span>
                   </div>
                 </div>
               `).join('')}
-              ${repeats > 1 ? `
-                <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl text-center text-sm text-gray-600 dark:text-gray-400">
-                  Most repeated title: "${topTitle}" (${repeats} times)
-                </div>
-              ` : ''}
             </div>
           `;
           container.appendChild(card);
@@ -672,23 +734,23 @@
       renderReview();
     }
 
+    // ──────────────────────────────────────────────
+    // MODALS
+    // ──────────────────────────────────────────────
     function openActionModal(id) {
       document.getElementById(id).classList.add("show");
     }
 
     function closeActionModal(event, id) {
-      if (!event || event.target.id === id) {
-        document.getElementById(id).classList.remove("show");
+      if (!event || event.target.id === id || event.target.classList.contains('action-modal-overlay')) {
+        document.getElementById(id)?.classList.remove("show");
       }
     }
 
-    // Auth Modal
     function openModal(mode) {
       const modal = document.getElementById('authModal');
-      const title = document.getElementById('modalTitle');
-      const subtitle = document.getElementById('modalSubtitle');
-      title.textContent = mode === 'signup' ? 'Create your account' : 'Sign in';
-      subtitle.textContent = mode === 'signup' ? 'Get started with Clearoid' : 'Get access to your account';
+      document.getElementById('modalTitle').textContent = mode === 'signup' ? 'Create your account' : 'Sign in';
+      document.getElementById('modalSubtitle').textContent = mode === 'signup' ? 'Get started with Clearoid' : 'Get access to your account';
       modal.classList.add('show');
     }
 
@@ -700,12 +762,20 @@
     }
 
     function switchModal(mode) {
-      closeModal({ target: document.getElementById('authModal') });
+      closeModal(null);
       setTimeout(() => openModal(mode), 300);
     }
 
-    // Delete dropdown
-    document.addEventListener('click', function(e) {
+    // ──────────────────────────────────────────────
+    // INITIALIZATION
+    // ──────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+      loadHistoryFromAPI();
+      setFilter('all');
+    });
+
+    // Delete dropdown behavior
+    document.addEventListener('click', e => {
       const options = document.getElementById('deleteOptions');
       const btn = document.getElementById('deleteIconBtn');
       if (options && !btn?.contains(e.target) && !options.contains(e.target)) {
@@ -713,7 +783,7 @@
       }
     });
 
-    document.getElementById('deleteIconBtn')?.addEventListener('click', function(e) {
+    document.getElementById('deleteIconBtn')?.addEventListener('click', e => {
       e.stopPropagation();
       document.getElementById('deleteOptions').classList.toggle('show');
     });

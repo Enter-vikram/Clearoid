@@ -20,7 +20,6 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* FIXED TOP BAR - Apple-style sticky + blur */
     .sticky-top {
       position: sticky;
       top: 0;
@@ -32,7 +31,6 @@
       transition: background 0.3s ease;
     }
 
-    /* FLOATING LABEL - Smooth Apple animation */
     .float-label {
       position: relative;
     }
@@ -88,7 +86,6 @@
       background: #111;
     }
 
-    /* Modal Styles */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -128,22 +125,18 @@
 
 <body class="bg-gray-50 dark:bg-black min-h-screen flex flex-col">
 
-  <!-- FIXED TOP BAR - Logo left, single Sign in button right -->
   <header class="sticky-top">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <!-- Logo - Left corner -->
       <div class="text-3xl font-bold text-white tracking-tight">
         Clearoid
       </div>
 
-      <!-- Right: Single Sign in button -->
       <button onclick="openModal('signin')" class="px-6 py-3 rounded-full bg-[#007aff] text-white font-medium hover:bg-[#0066cc] transition shadow-md">
         Sign in
       </button>
     </div>
   </header>
 
-  <!-- Main Content -->
   <main class="flex-grow flex items-center justify-center p-6">
     <div class="w-full max-w-2xl">
       <div class="text-center mb-12">
@@ -189,17 +182,16 @@
     </div>
   </main>
 
-  <!-- COMPACT FOOTER - Reduced padding & spacing -->
   <footer class="bg-black text-gray-400 pt-12 pb-10">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
         <div>
           <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">PRODUCT</h3>
           <ul class="space-y-3 text-base">
-            <li><a href="/" class="hover:text-white transition">Home</a></li>
-            <li><a href="/upload.html" class="hover:text-white transition">Upload</a></li>
-            <li><a href="/history.html" class="hover:text-white transition">History</a></li>
-            <li><a href="/export.html" class="hover:text-white transition">Export</a></li>
+            <li><a href="index.html" class="hover:text-white transition">Home</a></li>
+            <li><a href="upload.html" class="hover:text-white transition">Upload</a></li>
+            <li><a href="history.html" class="hover:text-white transition">History</a></li>
+            <li><a href="export.html" class="hover:text-white transition">Export</a></li>
           </ul>
         </div>
 
@@ -227,7 +219,6 @@
         </div>
       </div>
 
-      <!-- Bottom Bar - Very compact -->
       <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center text-sm gap-6">
         <select class="bg-gray-900 border border-gray-700 rounded-full px-5 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[140px]">
           <option>English</option>
@@ -293,7 +284,6 @@
     </div>
   </div>
 
-  <!-- Script -->
   <script>
     const API_URL = "http://127.0.0.1:8000";
     const responseDiv = document.getElementById("response");
@@ -330,7 +320,6 @@
       }
     };
 
-    // Modal Functions (fully working)
     function openModal(mode) {
       const modal = document.getElementById('authModal');
       const title = document.getElementById('modalTitle');
@@ -359,5 +348,4 @@
     }
   </script>
 </body>
-
 </html>

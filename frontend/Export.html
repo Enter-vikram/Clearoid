@@ -8,9 +8,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class'
-    }
+    tailwind.config = { darkMode: 'class' }
   </script>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -33,40 +31,45 @@
     .export-btn {
       background: #dc2626;
       color: white;
-      padding: 1rem 2rem;
+      padding: 1.25rem 3rem;
       border-radius: 9999px;
       font-weight: 600;
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       display: inline-flex;
       align-items: center;
-      gap: 0.75rem;
-      box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
-      transition: all 0.2s;
+      gap: 0.9rem;
+      box-shadow: 0 10px 25px rgba(220, 38, 38, 0.35);
+      transition: all 0.3s ease;
     }
 
-    .export-btn:hover {
+    .export-btn:hover:not(:disabled) {
       background: #b91c1c;
-      transform: translateY(-2px);
-      box-shadow: 0 15px 35px rgba(220, 38, 38, 0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 18px 40px rgba(220, 38, 38, 0.45);
+    }
+
+    .export-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
     .action-icon {
-      width: 3rem;
-      height: 3rem;
+      width: 3.75rem;
+      height: 3.75rem;
       border-radius: 50%;
-      background: #dc2626;
+      background: #1f2937;
       color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s;
-      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3);
+      transition: all 0.3s ease;
     }
 
     .action-icon:hover {
-      background: #b91c1c;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+      background: #374151;
+      transform: translateY(-3px);
     }
 
     .modal-overlay {
@@ -78,71 +81,55 @@
       display: none;
       align-items: center;
       justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
     }
     .modal-overlay.show {
       display: flex;
-      opacity: 1;
     }
     .modal-content {
-      background: rgba(28,28,30,0.92);
+      background: rgba(28,28,30,0.94);
       backdrop-filter: blur(20px);
       border: 1px solid rgba(56,56,58,0.5);
       border-radius: 24px;
       padding: 2.5rem;
-      max-width: 420px;
+      max-width: 440px;
       width: 90%;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
-      transform: scale(0.95);
-      transition: transform 0.3s ease;
-    }
-    .modal-overlay.show .modal-content {
-      transform: scale(1);
+      box-shadow: 0 25px 60px -12px rgba(0,0,0,0.9);
     }
   </style>
 </head>
 
 <body class="bg-gray-50 dark:bg-black min-h-screen flex flex-col">
 
-  <!-- FIXED TOP BAR -->
   <header class="sticky-top">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="text-3xl font-bold text-white tracking-tight">
-        Clearoid
-      </div>
-
+      <div class="text-3xl font-bold text-white tracking-tight">Clearoid</div>
       <button onclick="openModal('signin')" class="px-6 py-3 rounded-full bg-[#007aff] text-white font-medium hover:bg-[#0066cc] transition shadow-md">
         Sign in
       </button>
     </div>
   </header>
 
-  <!-- Main Content -->
   <main class="flex-grow flex items-center justify-center p-6">
     <div class="w-full max-w-4xl text-center">
-      <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-12 border border-gray-200 dark:border-gray-700">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8">
-          Your file is ready as an editable Excel sheet
+      <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-10 md:p-16 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+          Your export is ready!
         </h2>
 
-        <!-- Download EXCEL Button -->
-<div class="mb-12">
-  <button onclick="downloadExcel()" class="export-btn mx-auto">
-    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1" />
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M12 4v12" />
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M8 12l4 4 4-4" />
-    </svg>
-    Download EXCEL
-  </button>
-</div>
+        <p class="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+          <span id="exportSummary">Preparing your file...</span>
+        </p>
 
+        <div class="mb-14">
+          <button id="downloadBtn" onclick="startDownload()" class="export-btn mx-auto" disabled>
+            <svg id="loadingSpinner" class="w-9 h-9 animate-spin hidden" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"></path>
+            </svg>
+            <span id="btnText">Download CSV / Excel</span>
+          </button>
+        </div>
 
-        <!-- Share / Delete / Export Icons -->
         <div class="flex justify-center gap-6">
           <button onclick="shareLink()" class="action-icon" aria-label="Share link">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,29 +161,26 @@
     </div>
   </main>
 
-  <!-- COMPACT FOOTER -->
+  <!-- Footer -->
   <footer class="bg-black text-gray-400 pt-12 pb-10">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
         <div>
           <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">PRODUCT</h3>
           <ul class="space-y-3 text-base">
-            <li><a href="/" class="hover:text-white transition">Home</a></li>
-            <li><a href="/upload.html" class="hover:text-white transition">Upload</a></li>
-            <li><a href="/history.html" class="hover:text-white transition">History</a></li>
-            <li><a href="/export.html" class="hover:text-white transition">Export</a></li>
+            <li><a href="index.html" class="hover:text-white transition">Home</a></li>
+            <li><a href="upload.html" class="hover:text-white transition">Upload</a></li>
+            <li><a href="history.html" class="hover:text-white transition">History</a></li>
+            <li><a href="export.html" class="hover:text-white transition">Export</a></li>
           </ul>
         </div>
-
         <div>
           <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">COMPANY</h3>
-          <h4 class="text-white font-semibold text-base mb-4">About us</h4>
           <ul class="space-y-3 text-base">
             <li><a href="#" class="hover:text-white transition">Contact us</a></li>
             <li><a href="#" class="hover:text-white transition">Feedback</a></li>
           </ul>
         </div>
-
         <div>
           <h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">SOCIAL</h3>
           <div class="flex gap-8 items-center text-4xl justify-center md:justify-start">
@@ -213,12 +197,11 @@
       </div>
 
       <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center text-sm gap-6">
-        <select class="bg-gray-900 border border-gray-700 rounded-full px-5 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[140px]">
+        <select class="bg-gray-900 border border-gray-700 rounded-full px-5 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>English</option>
           <option>हिन्दी</option>
           <option>Español</option>
         </select>
-
         <div class="flex items-center gap-6">
           <p>© 2026 Clearoid</p>
           <a href="https://github.com/yourusername/clearoid" target="_blank" class="hover:text-white transition">GitHub</a>
@@ -227,39 +210,32 @@
     </div>
   </footer>
 
-  <!-- SIGN IN / SIGN UP MODAL -->
+  <!-- Auth Modal -->
   <div id="authModal" class="modal-overlay" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <div class="flex justify-between items-center mb-8">
         <h2 id="modalTitle" class="text-3xl font-bold text-white">Sign in</h2>
-        <button type="button" class="close-btn text-gray-400 hover:text-white text-4xl font-bold">×</button>
+        <button type="button" class="close-btn text-gray-400 hover:text-white text-4xl font-bold" onclick="closeModal(event)">×</button>
       </div>
-
       <p class="text-gray-400 text-center mb-10" id="modalSubtitle">Get access to your account</p>
 
       <form class="space-y-6">
         <div class="relative">
           <input type="email" id="email" placeholder=" " class="w-full px-6 py-5 text-lg bg-transparent border border-gray-700 rounded-xl focus:outline-none focus:border-[#007aff] focus:ring-2 focus:ring-[#007aff]/30 transition peer" />
-          <label for="email" class="absolute left-6 top-5 text-gray-400 text-lg pointer-events-none transition-all peer-focus:top-2 peer-focus:text-sm peer-focus:text-[#007aff] peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:text-sm peer-not-placeholder-shown:text-[#007aff]">Email</label>
+          <label for="email" class="absolute left-6 top-5 text-gray-400 text-lg pointer-events-none transition-all peer-focus:top-2 peer-focus:text-sm peer-focus:text-[#007aff]">Email</label>
         </div>
-
         <div class="relative">
           <input type="password" id="password" placeholder=" " class="w-full px-6 py-5 text-lg bg-transparent border border-gray-700 rounded-xl focus:outline-none focus:border-[#007aff] focus:ring-2 focus:ring-[#007aff]/30 transition peer" />
-          <label for="password" class="absolute left-6 top-5 text-gray-400 text-lg pointer-events-none transition-all peer-focus:top-2 peer-focus:text-sm peer-focus:text-[#007aff] peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:text-sm peer-not-placeholder-shown:text-[#007aff]">Password</label>
+          <label for="password" class="absolute left-6 top-5 text-gray-400 text-lg pointer-events-none transition-all peer-focus:top-2 peer-focus:text-sm peer-focus:text-[#007aff]">Password</label>
         </div>
-
         <button type="submit" class="w-full bg-[#007aff] text-white font-medium py-5 rounded-full hover:bg-[#0066cc] transition shadow-lg text-lg">
           Sign in
         </button>
       </form>
 
       <div class="relative my-8">
-        <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-gray-700"></div>
-        </div>
-        <div class="relative flex justify-center text-sm">
-          <span class="px-4 bg-gray-900/60 text-gray-400">or</span>
-        </div>
+        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-700"></div></div>
+        <div class="relative flex justify-center text-sm"><span class="px-4 bg-gray-900/60 text-gray-400">or</span></div>
       </div>
 
       <div class="space-y-4">
@@ -270,66 +246,168 @@
           <span class="text-xl">𝕏</span> Continue with X
         </button>
       </div>
-
-      <p class="text-center text-gray-500 mt-10 text-sm">
-        Don't have an account? <button type="button" onclick="switchModal('signup')" class="text-[#007aff] hover:underline font-medium">Sign up</button>
-      </p>
     </div>
   </div>
 
-  <!-- Script -->
   <script>
-    // Placeholder for real download (replace with backend call)
-    function downloadExcel() {
-      alert("Downloading Excel file... (Backend integration needed)");
-      // Real implementation: fetch('/api/export/excel').then(res => res.blob()).then(blob => ...)
-    }
+    // ──────────────────────────────────────────────
+    // Get export parameters from URL
+    // ──────────────────────────────────────────────
+    const urlParams = new URLSearchParams(window.location.search);
+    const exportType = urlParams.get('type') || 'all';
+    const selectedIds = urlParams.get('ids') 
+      ? urlParams.get('ids').split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
+      : [];
 
-    function shareLink() {
-      alert("Share link generated! (Copy and share with others)");
-      // Real: generate shareable URL with file ID
-    }
+    let exportData = [];
+    let totalCount = 0;
+    let filename = `clearoid_export_${new Date().toISOString().split('T')[0]}.csv`;
 
-    function deleteFile() {
-      if (confirm("Delete this exported file?")) {
-        alert("File deleted (Backend integration needed)");
-        // Real: fetch('/api/delete/export', {method: 'DELETE'})
+    // ──────────────────────────────────────────────
+    // Load data from backend
+    // ──────────────────────────────────────────────
+    async function loadExportData() {
+      try {
+        const res = await fetch('/api/history');
+        if (!res.ok) throw new Error('Failed to fetch data');
+
+        const json = await res.json();
+        let data = json.data || [];
+
+        // Apply filter based on export type
+        if (exportType === 'unique') {
+          data = data.filter(item => item.status === 'unique');
+          filename = 'clearoid_unique_titles.csv';
+        } else if (exportType === 'selected' && selectedIds.length > 0) {
+          data = data.filter(item => selectedIds.includes(item.id));
+          filename = `clearoid_selected_${data.length}_titles.csv`;
+        } else {
+          // default: all
+          filename = 'clearoid_all_titles.csv';
+        }
+
+        exportData = data;
+        totalCount = data.length;
+
+        // Update UI with real count
+        document.getElementById('exportSummary').innerHTML = 
+          `You are about to download <strong>${totalCount}</strong> record${totalCount !== 1 ? 's' : ''} (${exportType})`;
+
+        document.getElementById('btnText').textContent = `Download ${totalCount} item${totalCount !== 1 ? 's' : ''}`;
+        document.getElementById('downloadBtn').disabled = totalCount === 0;
+      } catch (err) {
+        console.error('Export preparation failed:', err);
+        document.getElementById('exportSummary').textContent = 'Failed to prepare export data';
+        document.getElementById('btnText').textContent = 'Error – Try Again';
       }
     }
 
-    function exportAll() {
-      alert("Exporting all data as Excel... (Backend integration needed)");
-      // Real: trigger full export
+    // ──────────────────────────────────────────────
+    // Generate and download CSV
+    // ──────────────────────────────────────────────
+    function downloadCSV() {
+      if (exportData.length === 0) {
+        alert('No data available to export');
+        return;
+      }
+
+      const headers = [
+        'ID',
+        'Title',
+        'Status',
+        'Cluster',
+        'Similarity Score',
+        'Created At'
+      ];
+
+      const csvRows = [headers.join(',')];
+
+      exportData.forEach(item => {
+        const row = [
+          item.id,
+          `"${(item.title || '').replace(/"/g, '""')}"`,
+          item.status,
+          item.cluster || '-',
+          item.similarityScore ? item.similarityScore.toFixed(3) : '1.000',
+          item.created_at || new Date().toISOString()
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
 
-    // Modal Functions
+    // ──────────────────────────────────────────────
+    // Download button with loading animation
+    // ──────────────────────────────────────────────
+    function startDownload() {
+      const btn = document.getElementById('downloadBtn');
+      const spinner = document.getElementById('loadingSpinner');
+      const text = document.getElementById('btnText');
+
+      btn.disabled = true;
+      spinner.classList.remove('hidden');
+      text.textContent = 'Downloading...';
+
+      setTimeout(() => {
+        downloadCSV();
+        btn.disabled = false;
+        spinner.classList.add('hidden');
+        text.textContent = `Download ${totalCount} item${totalCount !== 1 ? 's' : ''}`;
+        alert('Your file has been downloaded successfully!');
+      }, 1000); // small delay for visual effect
+    }
+
+    // ──────────────────────────────────────────────
+    // Share current export link
+    // ──────────────────────────────────────────────
+    function shareLink() {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Export link copied to clipboard!\nYou can share it with your team.');
+      }).catch(() => {
+        alert('Could not copy link. Please copy manually:\n' + url);
+      });
+    }
+
+    // ──────────────────────────────────────────────
+    // Cancel / delete export session
+    // ──────────────────────────────────────────────
+    function deleteFile() {
+      if (confirm('Cancel this export and return to history?')) {
+        window.location.href = '/history.html';
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    // Modal helpers (same as other pages)
+    // ──────────────────────────────────────────────
     function openModal(mode) {
       const modal = document.getElementById('authModal');
-      const title = document.getElementById('modalTitle');
-      const subtitle = document.getElementById('modalSubtitle');
-      if (mode === 'signup') {
-        title.textContent = 'Create your account';
-        subtitle.textContent = 'Get started with Clearoid';
-      } else {
-        title.textContent = 'Sign in';
-        subtitle.textContent = 'Get access to your account';
-      }
+      document.getElementById('modalTitle').textContent = mode === 'signup' ? 'Create your account' : 'Sign in';
+      document.getElementById('modalSubtitle').textContent = mode === 'signup' ? 'Get started with Clearoid' : 'Get access to your account';
       modal.classList.add('show');
     }
 
     function closeModal(event) {
       const modal = document.getElementById('authModal');
-      if (event.target === modal || event.target.classList.contains('close-btn')) {
+      if (!event || event.target === modal || event.target.classList.contains('close-btn')) {
         modal.classList.remove('show');
       }
     }
 
-    function switchModal(mode) {
-      const modal = document.getElementById('authModal');
-      modal.classList.remove('show');
-      setTimeout(() => openModal(mode), 300);
-    }
+    // Load data when page is ready
+    window.addEventListener('DOMContentLoaded', loadExportData);
   </script>
 </body>
-
 </html>
