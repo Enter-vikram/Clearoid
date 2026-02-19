@@ -1,0 +1,24 @@
+{
+  "name": "clearoid-design-system",
+  "version": "1.0.0",
+  "description": "Clearoid Premium SaaS Design System - Tailwind CSS v4+ with vanilla HTML/CSS/JS",
+  "scripts": {
+    "dev": "tailwindcss -i ./frontend/styles.css -o ./frontend/dist/styles.css --watch",
+    "build": "tailwindcss -i ./frontend/styles.css -o ./frontend/dist/styles.css --minify",
+    "build:prod": "npm run build && npm run minify:js",
+    "minify:js": "terser frontend/clearoid.js -o frontend/dist/clearoid.min.js -c -m"
+  },
+  "keywords": [
+    "design-system",
+    "tailwind",
+    "saas",
+    "ui-components",
+    "clearoid"
+  ],
+  "author": "Clearoid Team",
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "terser": "^5.27.0"
+  }
+}

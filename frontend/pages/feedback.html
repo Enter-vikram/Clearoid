@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feedback - Clearoid</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .sticky-top {
+      position: sticky; top: 0; z-index: 1000;
+      background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <header class="sticky-top">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/index.html" class="text-3xl font-bold text-white tracking-tight hover:opacity-80 transition">Clearoid</a>
+      <div class="flex items-center gap-6"></div>
+    </div>
+  </header>
+
+  <main class="flex-grow p-6">
+    <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl p-10">
+      <h1 class="text-5xl font-bold text-gray-900 mb-8">Feedback</h1>
+      <p class="text-lg text-gray-700 mb-6">We value your feedback to improve Clearoid.</p>
+      <p class="text-lg text-gray-700 mb-4">You can share:</p>
+      <ul class="list-disc pl-6 text-lg text-gray-700 space-y-2 mb-6">
+        <li>Feature suggestions</li>
+        <li>Bug reports</li>
+        <li>Improvement ideas</li>
+        <li>General feedback</li>
+      </ul>
+      <p class="text-lg text-gray-700 mb-3">Send feedback via:</p>
+      <p class="text-lg text-gray-700"><strong>Email:</strong> <a href="mailto:clearoid.ai@gmail.com" class="text-blue-600 hover:underline">clearoid.ai@gmail.com</a></p>
+      <p class="text-lg text-gray-700"><strong>Subject:</strong> Clearoid Feedback</p>
+    </div>
+  </main>
+
+  <footer></footer>
+  <script src="/assets/js/site-chrome.js"></script>
+</body>
+</html>

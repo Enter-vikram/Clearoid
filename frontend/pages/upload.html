@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Excel – Clearoid</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-50: #eff6ff;
+      --primary-100: #dbeafe;
+      --primary-500: #3b82f6;
+      --primary-600: #2563eb;
+      --primary-700: #1d4ed8;
+      
+      --neutral-0: #ffffff;
+      --neutral-50: #f9fafb;
+      --neutral-100: #f3f4f6;
+      --neutral-200: #e5e7eb;
+      --neutral-300: #d1d5db;
+      --neutral-400: #9ca3af;
+      --neutral-500: #6b7280;
+      --neutral-600: #4b5563;
+      --neutral-700: #374151;
+      --neutral-800: #1f2933;
+      --neutral-900: #111827;
+      
+      --success-50: #ecfdf5;
+      --success-500: #22c55e;
+      --success-600: #16a34a;
+      
+      --error-50: #fef2f2;
+      --error-500: #ef4444;
+      --error-600: #dc2626;
+      
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 8px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 20px rgba(0,0,0,0.12);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      background: var(--neutral-50);
+      color: var(--neutral-900);
+      font-size: 16px;
+      line-height: 24px;
+    }
+
+    /* FIXED TOP BAR - Apple-style sticky + blur */
+    .sticky-top {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--neutral-900);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      height: 64px;
+    }
+
+    /* Split Panel Layout */
+    .split-container {
+      display: flex;
+      height: calc(100vh - 64px);
+      overflow: hidden;
+      transition: all 0.2s ease-out;
+    }
+
+    .split-container.centered {
+      justify-content: center;
+      align-items: center;
+    }
+
+    .split-container.split-mode {
+      justify-content: flex-start;
+      align-items: stretch;
+    }
+
+    .split-panel {
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: all 0.2s ease-out;
+    }
+
+    .split-container.centered #leftPanel {
+      flex: none !important;
+      width: auto;
+      max-width: 900px;
+    }
+
+    .split-container.centered #rightPanel,
+    .split-container.centered #divider {
+      display: none;
+    }
+
+    .divider {
+      width: 8px;
+      background: transparent;
+      cursor: ew-resize;
+      transition: all 0.2s ease-out;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--neutral-200);
+      transform: translateX(-50%);
+      transition: all 0.2s ease-out;
+    }
+
+    .divider:hover::before {
+      background: var(--primary-500);
+      width: 3px;
+    }
+
+    .dark .divider::before {
+      background: var(--neutral-700);
+    }
+
+    .dark .divider:hover::before {
+      background: var(--primary-500);
+    }
+
+    .split-container.split-mode .divider {
+      display: block;
+    }
+
+    .resizable-preview {
+      position: relative;
+    }
+
+    .resize-handle {
+      position: absolute;
+      background: transparent;
+    }
+
+    .resize-handle.top,
+    .resize-handle.bottom {
+      left: 0;
+      right: 0;
+      height: 8px;
+      cursor: ns-resize;
+    }
+
+    .resize-handle.top { top: 0; }
+    .resize-handle.bottom { bottom: 0; }
+
+    .resize-handle.left,
+    .resize-handle.right {
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      cursor: ew-resize;
+    }
+
+    .resize-handle.left { left: 0; }
+    .resize-handle.right { right: 0; }
+
+    .resize-handle.corner {
+      width: 16px;
+      height: 16px;
+    }
+
+    .resize-handle.top-left { top: 0; left: 0; cursor: nwse-resize; }
+    .resize-handle.top-right { top: 0; right: 0; cursor: nesw-resize; }
+    .resize-handle.bottom-left { bottom: 0; left: 0; cursor: nesw-resize; }
+    .resize-handle.bottom-right { bottom: 0; right: 0; cursor: nwse-resize; }
+
+    /* FLOATING LABEL (used in modal) */
+    .float-label {
+      position: relative;
+    }
+    .float-label input {
+      width: 100%;
+      padding: 1.5rem 1.25rem;
+      font-size: 1.25rem;
+      background: transparent;
+      border: 2px solid #d1d5db;
+      border-radius: 1rem;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .float-label input:focus {
+      border-color: #007aff;
+      box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+    }
+    .float-label label {
+      position: absolute;
+      left: 1.25rem;
+      top: 1.5rem;
+      color: #6b7280;
+      font-size: 1.125rem;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      background: transparent;
+      padding: 0 0.25rem;
+    }
+    .float-label input:focus~label,
+    .float-label input:not(:placeholder-shown)~label {
+      top: -0.75rem;
+      left: 1rem;
+      font-size: 0.875rem;
+      color: #007aff;
+      background: white;
+    }
+    .dark .float-label input {
+      border-color: #374151;
+    }
+    .dark .float-label label {
+      color: #9ca3af;
+      background: #111;
+    }
+    .dark .float-label input:focus~label,
+    .dark .float-label input:not(:placeholder-shown)~label {
+      background: #111;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+    .modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-content {
+      background: var(--neutral-900);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--neutral-700);
+      border-radius: var(--radius-xl);
+      padding: 2.5rem;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+      transform: scale(0.95);
+      transition: transform 0.2s ease-out;
+    }
+    .modal-overlay.show .modal-content {
+      transform: scale(1);
+    }
+
+    @media (max-width: 1024px) {
+      .split-container {
+        flex-direction: column;
+        height: auto;
+      }
+      .divider {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-black min-h-screen flex flex-col">
+
+  <!-- FIXED TOP BAR -->
+  <header class="sticky-top">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/index.html" class="text-3xl font-bold text-white tracking-tight hover:opacity-80 transition">
+        Clearoid
+      </a>
+      <div class="flex items-center gap-6">
+        <a href="/index.html" class="text-white hover:text-gray-300 transition">Home</a>
+        <a href="/pages/dashboard.html" class="text-white hover:text-gray-300 transition">Dashboard</a>
+        <a href="/pages/upload.html" class="text-white hover:text-gray-300 transition">Upload</a>
+        <a href="/pages/history.html" class="text-white hover:text-gray-300 transition">History</a>
+        <a href="/pages/export.html" class="text-white hover:text-gray-300 transition">Export</a>
+        <a href="/pages/signin.html" class="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition">Sign in</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main id="mainContainer" class="split-container centered">
+    <div id="leftPanel" class="split-panel">
+      <div class="flex flex-col items-center justify-start pt-8 px-6">
+      <div class="text-center mb-8">
+        <h1 class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white">Upload Excel</h1>
+        <p class="mt-4 text-xl text-gray-600 dark:text-gray-400">
+          Drop your Excel/CSV file — duplicates will be removed automatically
+        </p>
+      </div>
+
+      <div class="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-16 border-2 border-dashed border-gray-300 dark:border-gray-700 text-center cursor-pointer transition hover:border-[#007aff] relative">
+        <!-- Add more files button -->
+        <button class="absolute top-8 right-8 bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition flex items-center gap-2 shadow-lg">
+          Add more files
+          <span class="bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">+1</span>
+        </button>
+
+        <div id="dropZone">
+          <svg class="mx-auto h-20 w-20 text-gray-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+            <path
+              d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <p class="text-2xl font-medium text-gray-700 dark:text-gray-300">Click to select or drag & drop</p>
+          <p class="mt-2 text-gray-500">Excel (.xlsx, .xls) or CSV files only</p>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
+        </div>
+
+        <div id="processing" class="hidden mt-10">
+          <div class="inline-flex items-center">
+            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span class="ml-4 text-xl">Processing your file...</span>
+          </div>
+        </div>
+
+        <div id="result" class="hidden mt-10 p-8 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl">
+          <p class="text-2xl font-bold text-green-800 dark:text-green-400 mb-2" id="resultText"></p>
+          <button onclick="showPreviewPanel()" class="w-full mt-4 px-10 py-4 bg-[#007aff] hover:bg-[#0066cc] text-white font-semibold rounded-2xl shadow-lg transition">
+            Preview Excel
+          </button>
+          <a href="/pages/history.html" class="mt-4 block w-full text-center px-10 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-2xl shadow-lg transition">
+            View Clean List →
+          </a>
+        </div>
+      </div>
+
+      </div>
+    </div>
+
+    <div id="divider" class="divider"></div>
+
+    <div id="rightPanel" class="split-panel" style="flex: 1;">
+      <!-- EXCEL PREVIEW PANEL -->
+      <div id="previewPanel" class="hidden h-full bg-white dark:bg-gray-900 p-6 flex flex-col resizable-preview">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Excel Preview</h2>
+        <button onclick="closePreviewPanel()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 text-2xl">×</button>
+      </div>
+
+      <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">View Mode:</label>
+          <select id="viewMode" onchange="changeViewMode()" class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+            <option value="auto">Auto (based on size)</option>
+            <option value="grid">Excel Grid</option>
+          </select>
+        </div>
+        <label class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+          <input type="checkbox" id="enableEdit" onchange="toggleEdit()" class="w-4 h-4">
+          <span class="text-sm">Enable Editing</span>
+        </label>
+      </div>
+
+      <div class="mb-4 flex gap-2">
+        <input type="text" id="rangeInput" placeholder="Select rows: 1-50" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+        <input type="text" id="columnInput" placeholder="Select columns: A~C" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+      </div>
+
+      <button onclick="applySelection()" class="w-full bg-[#007aff] text-white font-medium py-2.5 rounded-lg hover:bg-[#0066cc] transition mb-4 text-sm">
+        Apply Selection
+      </button>
+
+      <div class="mb-4 flex gap-2">
+        <input type="text" id="searchInput" placeholder="Search in data..." class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+        <button onclick="searchData()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition text-sm">
+          Search
+        </button>
+        <button onclick="clearSearch()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
+          Clear
+        </button>
+      </div>
+
+      <div id="autoView" class="flex-1 overflow-auto border border-gray-300 dark:border-gray-700 rounded-lg">
+        <table class="w-full text-sm" id="previewTable">
+          <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0">
+            <tr>
+              <th class="px-3 py-2 text-left">#</th>
+              <th class="px-3 py-2 text-left">Data</th>
+              <th class="px-3 py-2 text-left">Status</th>
+            </tr>
+          </thead>
+          <tbody id="previewTableBody" class="text-gray-900 dark:text-white">
+          </tbody>
+        </table>
+      </div>
+
+      <div id="gridView" class="hidden flex-1 overflow-auto border border-gray-300 dark:border-gray-700 rounded-lg">
+        <table class="w-full text-sm border-collapse" id="gridTable">
+          <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0">
+            <tr id="gridHeader">
+            </tr>
+          </thead>
+          <tbody id="gridTableBody" class="text-gray-900 dark:text-white">
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Resize Handles -->
+      <div class="resize-handle top"></div>
+      <div class="resize-handle bottom"></div>
+      <div class="resize-handle left"></div>
+      <div class="resize-handle right"></div>
+      <div class="resize-handle corner top-left"></div>
+      <div class="resize-handle corner top-right"></div>
+      <div class="resize-handle corner bottom-left"></div>
+      <div class="resize-handle corner bottom-right"></div>
+    </div>
+    </div>
+  </main>
+
+  <footer></footer>
+
+  <!-- Script -->
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const processing = document.getElementById('processing');
+    const result = document.getElementById('result');
+    const resultText = document.getElementById('resultText');
+
+    // Split Panel Resizing
+    let isResizing = false;
+    let userResized = false;
+    let savedLeftPercent = 50;
+    const divider = document.getElementById('divider');
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.getElementById('rightPanel');
+    const mainContainer = document.getElementById('mainContainer');
+
+    divider.addEventListener('mousedown', (e) => {
+      if (mainContainer.classList.contains('split-mode')) {
+        e.preventDefault();
+        isResizing = true;
+        document.body.style.cursor = 'ew-resize';
+        document.body.style.userSelect = 'none';
+        mainContainer.style.pointerEvents = 'none';
+        divider.style.pointerEvents = 'auto';
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      
+      e.preventDefault();
+      
+      const containerRect = mainContainer.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const leftWidth = e.clientX - containerRect.left;
+      const leftPercent = (leftWidth / containerWidth) * 100;
+      
+      if (leftPercent >= 30 && leftPercent <= 70) {
+        savedLeftPercent = leftPercent;
+        leftPanel.style.flex = `0 0 ${leftPercent}%`;
+        rightPanel.style.flex = `0 0 ${100 - leftPercent}%`;
+        userResized = true;
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        mainContainer.style.pointerEvents = '';
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (mainContainer.classList.contains('split-mode')) {
+        if (userResized) {
+          leftPanel.style.flex = `0 0 ${savedLeftPercent}%`;
+          rightPanel.style.flex = `0 0 ${100 - savedLeftPercent}%`;
+        } else {
+          leftPanel.style.flex = '1';
+          rightPanel.style.flex = '1';
+        }
+      }
+    });
+
+    ['dragover', 'dragenter'].forEach(evt => dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      dropZone.classList.add('border-[#007aff]', 'bg-blue-50/10');
+    }));
+
+    ['dragleave', 'dragend'].forEach(evt => dropZone.addEventListener(evt, () => dropZone.classList.remove('border-[#007aff]', 'bg-blue-50/10')));
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('border-[#007aff]', 'bg-blue-50/10');
+      if (e.dataTransfer.files.length) fileInput.files = e.dataTransfer.files;
+      uploadFile();
+    });
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', uploadFile);
+
+    async function uploadFile() {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      processing.classList.remove('hidden');
+      result.classList.add('hidden');
+      result.classList.remove('bg-red-50', 'dark:bg-red-900/20', 'border-red-200', 'dark:border-red-800');
+      result.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border-green-200', 'dark:border-green-800');
+      resultText.classList.remove('text-red-800', 'dark:text-red-400');
+      resultText.classList.add('text-green-800', 'dark:text-green-400');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/excel/bulk-upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        processing.classList.add('hidden');
+        result.classList.remove('hidden');
+
+        const fileName = data.filename || file.name;
+        if (data.status === 'already_processed') {
+          resultText.innerHTML = `
+            <strong>Already processed earlier</strong><br>
+            File: ${fileName}<br>
+            Processed: ${data.processed}, Saved: ${data.saved}, Duplicates: ${data.duplicates}
+          `;
+        } else {
+          resultText.innerHTML = `
+            <strong>Upload successful!</strong><br>
+            File: ${fileName}<br>
+            Processing in background
+          `;
+        }
+
+        window.uploadedFileName = fileName;
+      } catch (err) {
+        processing.classList.add('hidden');
+        result.classList.remove('hidden');
+        result.classList.remove('bg-green-50', 'dark:bg-green-900/20', 'border-green-200', 'dark:border-green-800');
+        result.classList.add('bg-red-50', 'dark:bg-red-900/20', 'border-red-200', 'dark:border-red-800');
+        resultText.classList.remove('text-green-800', 'dark:text-green-400');
+        resultText.classList.add('text-red-800', 'dark:text-red-400');
+        resultText.innerHTML = 'Upload failed. Check server.';
+      }
+    }
+
+    // Preview Panel Functions
+    let previewData = [];
+    let gridData = [];
+
+    function showPreviewPanel() {
+      const mainContainer = document.getElementById('mainContainer');
+      const panel = document.getElementById('previewPanel');
+      const leftPanel = document.getElementById('leftPanel');
+      const rightPanel = document.getElementById('rightPanel');
+      
+      mainContainer.classList.remove('centered');
+      mainContainer.classList.add('split-mode');
+      
+      if (userResized) {
+        leftPanel.style.flex = `0 0 ${savedLeftPercent}%`;
+        rightPanel.style.flex = `0 0 ${100 - savedLeftPercent}%`;
+      } else {
+        leftPanel.style.flex = '1';
+        rightPanel.style.flex = '1';
+      }
+      
+      panel.classList.remove('hidden');
+      loadPreviewData();
+    }
+
+    function closePreviewPanel() {
+      const mainContainer = document.getElementById('mainContainer');
+      const panel = document.getElementById('previewPanel');
+      
+      panel.classList.add('hidden');
+      mainContainer.classList.remove('split-mode');
+      mainContainer.classList.add('centered');
+    }
+
+    function showPreview() {
+      showPreviewPanel();
+    }
+
+    function closePreview() {
+      closePreviewPanel();
+    }
+
+    async function loadPreviewData() {
+      try {
+        const response = await fetch('/api/history');
+        const result = await response.json();
+        const rows = (result.data || []).slice(0, 200);
+
+        previewData = rows.map((item, idx) => ({
+          row: item.id || idx + 1,
+          data: item.title || item.normalized || '',
+          status: item.status || 'unique'
+        }));
+
+        gridData = [
+          ['ID', 'Title', 'Normalized', 'Status'],
+          ...rows.map((item, idx) => [
+            item.id || idx + 1,
+            item.title || '',
+            item.normalized || '',
+            item.status || 'unique'
+          ])
+        ];
+      } catch (error) {
+        previewData = [];
+        gridData = [['ID', 'Title', 'Normalized', 'Status']];
+      }
+
+      renderPreviewTable(previewData);
+      renderGridTable(gridData);
+    }
+
+    function renderPreviewTable(data) {
+      const tbody = document.getElementById('previewTableBody');
+      const isEditable = document.getElementById('enableEdit')?.checked || false;
+      tbody.innerHTML = data.map((item, idx) => `
+        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+          <td class="px-3 py-2">${item.row}</td>
+          <td class="px-3 py-2" ${isEditable ? `contenteditable="true" data-idx="${idx}" data-field="data"` : ''}>${item.data}</td>
+          <td class="px-3 py-2 text-red-600 dark:text-red-400">${item.status}</td>
+        </tr>
+      `).join('');
+      
+      if (isEditable) {
+        tbody.querySelectorAll('[contenteditable]').forEach(cell => {
+          cell.addEventListener('blur', function() {
+            const idx = this.dataset.idx;
+            const field = this.dataset.field;
+            previewData[idx][field] = this.textContent;
+          });
+        });
+      }
+    }
+
+    function renderGridTable(data) {
+      const header = document.getElementById('gridHeader');
+      const tbody = document.getElementById('gridTableBody');
+      const isEditable = document.getElementById('enableEdit')?.checked || false;
+      
+      header.innerHTML = data[0].map(col => `<th class="px-3 py-2 text-left border border-gray-300 dark:border-gray-700">${col}</th>`).join('');
+      
+      tbody.innerHTML = data.slice(1).map((row, idx) => `
+        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+          ${row.map((cell, cellIdx) => `<td class="px-3 py-2 border border-gray-300 dark:border-gray-700" ${isEditable && cellIdx > 0 ? `contenteditable="true" data-row="${idx}" data-col="${cellIdx}"` : ''}>${cell}</td>`).join('')}
+        </tr>
+      `).join('');
+      
+      if (isEditable) {
+        tbody.querySelectorAll('[contenteditable]').forEach(cell => {
+          cell.addEventListener('blur', function() {
+            const row = parseInt(this.dataset.row) + 1;
+            const col = this.dataset.col;
+            gridData[row][col] = this.textContent;
+          });
+        });
+      }
+    }
+
+    function changeViewMode() {
+      const mode = document.getElementById('viewMode').value;
+      const autoView = document.getElementById('autoView');
+      const gridView = document.getElementById('gridView');
+      
+      if (mode === 'grid') {
+        autoView.classList.add('hidden');
+        gridView.classList.remove('hidden');
+      } else {
+        autoView.classList.remove('hidden');
+        gridView.classList.add('hidden');
+      }
+    }
+
+    function toggleEdit() {
+      const mode = document.getElementById('viewMode').value;
+      if (mode === 'grid') {
+        renderGridTable(gridData);
+      } else {
+        renderPreviewTable(previewData);
+      }
+    }
+
+    function applySelection() {
+      const rowRange = document.getElementById('rangeInput').value;
+      const colRange = document.getElementById('columnInput').value;
+      
+      if (!rowRange && !colRange) return;
+      
+      let filtered = [...previewData];
+      
+      if (rowRange) {
+        const match = rowRange.match(/(\d+)-(\d+)/);
+        if (match) {
+          const start = parseInt(match[1]);
+          const end = parseInt(match[2]);
+          filtered = filtered.filter(item => item.row >= start && item.row <= end);
+        }
+      }
+      
+      renderPreviewTable(filtered);
+      console.log('Applied selection - Rows:', rowRange, 'Columns:', colRange);
+    }
+
+    function searchData() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      if (query && previewData.length > 0) {
+        const filtered = previewData.filter(item => item.data.toLowerCase().includes(query));
+        renderPreviewTable(filtered);
+      }
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      if (previewData.length > 0) {
+        renderPreviewTable(previewData);
+      }
+    }
+
+  </script>
+  <script src="/assets/js/site-chrome.js"></script>
+</body>
+
+</html>

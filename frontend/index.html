@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clearoid</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* FIXED TOP BAR - Apple-style sticky + blur */
+    .sticky-top {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      transition: background 0.3s ease;
+    }
+
+    /* FLOATING LABEL - Smooth Apple animation */
+    .float-label {
+      position: relative;
+    }
+
+    .float-label input {
+      width: 100%;
+      padding: 1.5rem 1.25rem;
+      font-size: 1.25rem;
+      background: transparent;
+      border: 2px solid #d1d5db;
+      border-radius: 1rem;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .float-label input:focus {
+      border-color: #007aff;
+      box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+    }
+
+    .float-label label {
+      position: absolute;
+      left: 1.25rem;
+      top: 1.5rem;
+      color: #6b7280;
+      font-size: 1.125rem;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      background: transparent;
+      padding: 0 0.25rem;
+    }
+
+    .float-label input:focus~label,
+    .float-label input:not(:placeholder-shown)~label {
+      top: -0.75rem;
+      left: 1rem;
+      font-size: 0.875rem;
+      color: #007aff;
+      background: white;
+    }
+
+    .dark .float-label input {
+      border-color: #374151;
+    }
+
+    .dark .float-label label {
+      color: #9ca3af;
+      background: #111;
+    }
+
+    .dark .float-label input:focus~label,
+    .dark .float-label input:not(:placeholder-shown)~label {
+      background: #111;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-black min-h-screen flex flex-col">
+
+  <!-- FIXED TOP BAR - Logo left, single Sign in button right -->
+  <header class="sticky-top">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <!-- Logo - Left corner -->
+      <div class="text-3xl font-bold text-white tracking-tight">
+        Clearoid
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="flex items-center gap-6">
+        <a href="/index.html" class="text-white hover:text-gray-300 transition">Home</a>
+        <a href="/pages/dashboard.html" class="text-white hover:text-gray-300 transition">Dashboard</a>
+        <a href="/pages/upload.html" class="text-white hover:text-gray-300 transition">Upload</a>
+        <a href="/pages/history.html" class="text-white hover:text-gray-300 transition">History</a>
+        <a href="/pages/export.html" class="text-white hover:text-gray-300 transition">Export</a>
+        <button onclick="openModal('signin')" class="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition">Sign in</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow flex items-center justify-center p-6">
+    <div class="w-full max-w-2xl">
+      <div class="text-center mb-12">
+        <h1 class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white tracking-tight">Clearoid</h1>
+        <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
+          Real-time AI duplicate detection for project titles
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-10 border border-gray-200 dark:border-gray-800">
+        <div class="float-label">
+          <input type="text" id="titleInput" placeholder=" " />
+          <label>Enter project title</label>
+        </div>
+
+        <div class="flex gap-4 mt-10">
+          <button id="submitBtn" class="flex-1 bg-black dark:bg-white text-white dark:text-black font-semibold py-5 rounded-2xl hover:opacity-90 transition shadow-lg">
+            Submit Title
+          </button>
+
+          <button id="checkBtn" class="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-semibold py-5 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition shadow-lg">
+            Check Duplicate
+          </button>
+        </div>
+
+        <div class="text-center text-gray-500 dark:text-gray-400 my-10 text-lg">or</div>
+
+        <a href="/pages/upload.html">
+          <button class="w-full bg-white text-black border hover:bg-gray-100 font-bold py-6 rounded-3xl text-xl shadow-xl transform hover:scale-105 transition duration-300">
+            Upload Excel File (Bulk)
+          </button>
+        </a>
+
+        <div id="response" class="message hidden mt-8 text-center py-5 rounded-2xl text-lg font-medium">
+        </div>
+
+        <div class="text-center mt-10">
+          <a href="/pages/history.html" class="text-blue-600 dark:text-blue-400 hover:underline font-medium text-lg">
+            View all submissions →
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer></footer>
+
+  <!-- Script -->
+  <script>
+    const API_URL = "";
+    const responseDiv = document.getElementById("response");
+    
+    function openModal(mode) {
+      if (mode === "signin") {
+        window.location.href = "/pages/signin.html";
+      }
+    }
+
+    function showMessage(msg, type = "success") {
+      responseDiv.textContent = msg;
+      responseDiv.className = `message block font-medium text-lg py-5 px-8 rounded-2xl ${type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
+        type === 'duplicate' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
+        'bg-red-50 text-red-800 border border-red-200'
+      }`;
+    }
+
+    document.getElementById("submitBtn").onclick = async () => {
+      const title = document.getElementById("titleInput").value.trim();
+      if (!title) return showMessage("Please enter a title", "error");
+      try {
+        const res = await fetch(`${API_URL}/api/submit`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title }) });
+        const data = await res.json();
+        res.ok ? showMessage(`Saved – ID: ${data.id}`, "success") : showMessage("Error", "error");
+      } catch {
+        showMessage("Network error", "error");
+      }
+    };
+
+    document.getElementById("checkBtn").onclick = async () => {
+      const title = document.getElementById("titleInput").value.trim();
+      if (!title) return showMessage("Please enter a title", "error");
+      try {
+        const res = await fetch(`${API_URL}/api/check-duplicate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title }) });
+        const data = await res.json();
+        data.duplicate
+          ? showMessage(`Duplicate – Match ID: ${data.match_id} (score ${data.score})`, "duplicate")
+          : showMessage("Unique title", "success");
+      } catch {
+        showMessage("Network error", "error");
+      }
+    };
+  </script>
+  <script src="/assets/js/site-chrome.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,169 @@
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+::selection {
+  background: #3b82f6;
+  color: white;
+}
+
+.dark ::selection {
+  background: #60a5fa;
+}
+
+/* Cards & panels */
+.card,
+.panel {
+  background: white;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.dark .card,
+.dark .panel {
+  background: #111827;
+  border: 1px solid #1f2937;
+}
+
+.card {
+  text-align: center;
+}
+
+.stat {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.stat.blue {
+  color: #2563eb;
+}
+.stat.green {
+  color: #16a34a;
+}
+.stat.amber {
+  color: #d97706;
+}
+.stat.purple {
+  color: #7c3aed;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+
+.btn.primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn.secondary {
+  background: #e5e7eb;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Search */
+.search-input {
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  border: 2px solid #d1d5db;
+  background: transparent;
+  font-size: 1.1rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* Table */
+.thead th {
+  padding: 1.5rem;
+  text-align: left;
+  font-weight: 600;
+  background: #f9fafb;
+}
+
+.dark .thead th {
+  background: #1f2937;
+}
+
+.row td {
+  padding: 1.5rem;
+  vertical-align: top;
+}
+
+.row:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.dark .row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Badges */
+.badge {
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.badge.uniq {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge.dup {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Cluster UI */
+.cluster-btn {
+  font-size: 0.85rem;
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.cluster-btn:hover {
+  text-decoration: underline;
+}
+
+.cluster-box {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: #f3f4f6;
+}
+
+.dark .cluster-box {
+  background: #1f2937;
+}
+
+/* States */
+.state {
+  text-align: center;
+  padding: 4rem;
+  font-size: 1.25rem;
+  color: #6b7280;
+}
+
+.muted {
+  color: #6b7280;
+}
+
+.hidden {
+  display: none;
+}
