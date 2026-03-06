@@ -2,13 +2,15 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks,
 import pandas as pd
 import numpy as np
 import hashlib
+import re
 import uuid
 from pathlib import Path
 
 from database.connection import SessionLocal
 from database.models import Title, BulkUploadRun
-from backend.services.excel_deduper import dedupe_excel
 from backend.services.embedding_service import get_embedding
+from backend.services.title_service import is_probable_duplicate
+from backend.utils.text_cleaner import clean_text
 
 router = APIRouter(prefix="/excel", tags=["Excel"])
 
@@ -51,42 +53,71 @@ def process_file_bulk_bg(file_path: str, filename: str, skip_hash_check: bool = 
         df = df[df[first_col].astype(str).str.strip() != '']
         df = df[df[first_col].astype(str).str.lower() != 'nan']
 
-        unique_df, clusters = dedupe_excel(
-            df,
-            column=None,
-            ignore_numbers=True
+        canonical_rows = (
+            db.query(Title)
+            .filter(Title.is_duplicate == 0)
+            .all()
         )
 
-        existing_norms = {
-            r[0] for r in db.query(Title.normalized_title).all()
-        }
-
+        processed = 0
         saved = 0
+        duplicates = 0
+        clusters = {}
 
-        for _, row in unique_df.iterrows():
-            normalized = row["normalized"]
-            
-            # Skip empty or nan normalized values
-            if not normalized or normalized == 'nan' or pd.isna(normalized):
+        for _, row in df.iterrows():
+            original = str(row[first_col]).strip()
+            # Preserve alphanumeric IDs (e.g., 1CG21CS127) to avoid over-collapsing
+            # when IGNORE_NUMBERS is enabled for natural-language titles.
+            looks_like_identifier = bool(re.match(r"^[A-Za-z0-9_-]{5,}$", original)) and any(
+                ch.isalpha() for ch in original
+            ) and any(ch.isdigit() for ch in original)
+            normalized = original.lower() if looks_like_identifier else clean_text(original)
+
+            if not normalized or normalized == "nan" or pd.isna(normalized):
                 continue
+            processed += 1
 
-            if normalized in existing_norms:
-                continue
-
-            vec = get_embedding(normalized)
-            vec_bytes = np.array(vec, dtype=np.float32).tobytes()
-
-            db.add(
-                Title(
-                    title=row[first_col],
-                    normalized_title=normalized,
-                    embedding=vec_bytes,
-                    is_duplicate=0
-                )
+            vec = np.array(get_embedding(normalized), dtype=np.float32)
+            best_row, _, is_dup = is_probable_duplicate(
+                normalized,
+                vec,
+                canonical_rows,
             )
 
-            existing_norms.add(normalized)
-            saved += 1
+            cluster_key = best_row.normalized_title if best_row and is_dup else normalized
+            clusters.setdefault(cluster_key, []).append(original)
+
+            vec_bytes = vec.tobytes()
+
+            if is_dup:
+                duplicates += 1
+                db.add(
+                    Title(
+                        title=original,
+                        normalized_title=cluster_key,
+                        embedding=vec_bytes,
+                        is_duplicate=1,
+                    )
+                )
+            else:
+                db.add(
+                    Title(
+                        title=original,
+                        normalized_title=normalized,
+                        embedding=vec_bytes,
+                        is_duplicate=0
+                    )
+                )
+
+                canonical_rows.append(
+                    Title(
+                        title=original,
+                        normalized_title=normalized,
+                        embedding=vec_bytes,
+                        is_duplicate=0,
+                    )
+                )
+                saved += 1
 
         run_hash = file_hash
         if skip_hash_check:
@@ -95,9 +126,9 @@ def process_file_bulk_bg(file_path: str, filename: str, skip_hash_check: bool = 
         run = BulkUploadRun(
             filename=filename,
             file_hash=run_hash,
-            processed=len(df),
+            processed=processed,
             saved=saved,
-            duplicates=len(df) - saved,
+            duplicates=duplicates,
         )
 
         db.add(run)
@@ -105,9 +136,9 @@ def process_file_bulk_bg(file_path: str, filename: str, skip_hash_check: bool = 
 
         print({
             "file": filename,
-            "processed": len(df),
+            "processed": processed,
             "saved": saved,
-            "duplicates": len(df) - saved,
+            "duplicates": duplicates,
             "clusters": {k: v for k, v in clusters.items() if len(v) > 1}
         })
 
