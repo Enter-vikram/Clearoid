@@ -18,4 +18,5 @@ def process_excel(file_bytes: bytes, db: Session):
         .tolist()
     )
 
-    return process_bulk_titles(titles, db)
+    bulk_df = pd.DataFrame({"title": titles})
+    return process_bulk_titles(db, bulk_df)

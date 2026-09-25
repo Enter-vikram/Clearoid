@@ -1,10 +1,12 @@
 import logging
 import os
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -36,29 +38,61 @@ from backend.routes.excel_routes import router as excel_router
 from backend.routes.admin_routes import router as admin_router
 from backend.routes.auth_routes import router as auth_router
 
-# Ensure all model metadata (including auth User) is registered before table creation.
-Base.metadata.create_all(bind=engine)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Ensure all tables exist (works for both SQLite and PostgreSQL)
+    Base.metadata.create_all(bind=engine)
+    # Eagerly load ML model so the first request doesn't time out
+    logger.info("Pre-loading ML model...")
+    from backend.services.embedding_service import get_minilm_model
+    get_minilm_model()
+    logger.info("ML model ready.")
+    yield
+
 
 # FastAPI app
 app = FastAPI(
     title="Clearoid",
     description="AI-Assisted Title Normalization & Duplicate Detection System",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # CORS
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+_allow_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()] if _raw_origins else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Global error handler
+# Health check — must be registered before the StaticFiles catch-all
+@app.get("/health", tags=["Health"])
+async def health():
+    return {"status": "ok"}
+
+
+# Re-raise HTTPException so FastAPI's own 400/404/422 responses are not swallowed
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
+# Validation errors (422) — keep FastAPI's default behaviour
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
+
+# Catch-all for truly unexpected errors only
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.exception("Unhandled exception")
+    logger.exception("Unhandled exception: %s %s", request.method, request.url)
     return JSONResponse(
         status_code=500,
         content={"success": False, "detail": "Internal server error"},

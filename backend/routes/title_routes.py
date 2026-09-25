@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
-from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -18,6 +17,7 @@ from backend.services.title_service import (
     check_duplicate,
     find_similar_titles,
     count_duplicates,
+    is_probable_duplicate,
 )
 from database.models import Title
 
@@ -25,20 +25,19 @@ router = APIRouter(prefix="/api", tags=["Titles"])
 SIMILARITY_THRESHOLD = 0.85
 
 
-def _best_match_excluding(db: Session, vec: np.ndarray, exclude_id: int):
-    best_score = 0.0
-    best_row = None
-    for row in db.query(Title).filter(Title.id != exclude_id).all():
-        if not row.embedding:
-            continue
-        try:
-            stored = np.frombuffer(row.embedding, dtype=np.float32)
-            score = float(cosine_similarity([vec], [stored])[0][0])
-        except Exception:
-            continue
-        if score > best_score:
-            best_score = score
-            best_row = row
+def _best_match_excluding(db: Session, cleaned: str, vec: np.ndarray, exclude_id: int):
+    candidates = (
+        db.query(Title)
+        .filter(Title.id != exclude_id)
+        .filter(Title.is_duplicate == 0)
+        .all()
+    )
+    best_row, best_score, _ = is_probable_duplicate(
+        cleaned_text=cleaned,
+        vector=vec,
+        existing_rows=candidates,
+        threshold=0.0,
+    )
     return best_row, best_score
 
 
@@ -192,7 +191,7 @@ def update_title(title_id: int, payload: TitleUpdate, db: Session = Depends(get_
 
     cleaned = clean_text(raw)
     vec = np.array(get_embedding(cleaned), dtype=np.float32)
-    best_row, best_score = _best_match_excluding(db, vec, title_id)
+    best_row, best_score = _best_match_excluding(db, cleaned, vec, title_id)
 
     if best_row and best_score >= SIMILARITY_THRESHOLD:
         row.normalized_title = best_row.normalized_title

@@ -1,1019 +1,383 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clearoid • Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-       
-        .sidebar-link {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .sidebar-link:hover {
-            transform: translateX(4px);
-        }
-        .tab-active {
-            border-bottom: 3px solid #3b82f6;
-            color: white;
-        }
-        .stat-card:hover {
-            transform: translateY(-4px);
-        }
-        .cluster-bar {
-            height: 6px;
-            background: linear-gradient(90deg, #3b82f6, #60a5fa);
-            border-radius: 9999px;
-        }
-        .dropdown {
-            animation: dropdownPop 180ms cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes dropdownPop {
-            from { opacity: 0; transform: scale(0.95) translateY(-8px); }
-            to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clearoid Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --app-bg: linear-gradient(180deg, #06101f 0%, #0a1428 100%);
+      --app-text: #ffffff;
+      --panel-bg: #10203b;
+      --panel-border: #22365d;
+      --surface-bg: rgba(2, 6, 23, 0.7);
+      --surface-border: #1e293b;
+      --surface-strong: #0f172a;
+      --surface-soft: rgba(255, 255, 255, 0.05);
+      --input-bg: #0f172a;
+      --text-muted: #94a3b8;
+      --text-soft: #cbd5e1;
+      --sidebar-hover: rgba(59, 130, 246, 0.12);
+    }
+
+    body[data-theme="light"] {
+      --app-bg: linear-gradient(180deg, #f4f8ff 0%, #e8efff 100%);
+      --app-text: #0f172a;
+      --panel-bg: #ffffff;
+      --panel-border: #d7e3ff;
+      --surface-bg: rgba(255, 255, 255, 0.82);
+      --surface-border: #d7e3ff;
+      --surface-strong: #edf4ff;
+      --surface-soft: rgba(37, 99, 235, 0.08);
+      --input-bg: #ffffff;
+      --text-muted: #64748b;
+      --text-soft: #334155;
+      --sidebar-hover: rgba(37, 99, 235, 0.1);
+    }
+
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--app-bg);
+      color: var(--app-text);
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); }
+    .tab-active { color: #fff; border-bottom: 2px solid #60a5fa; }
+    .sidebar-link.is-active, .sidebar-link:hover { background: var(--sidebar-hover); color: inherit; }
+    body[data-theme="light"] .tab-active { color: #0f172a; }
+    body[data-theme="light"] .text-white,
+    body[data-theme="light"] .hover\:text-white:hover { color: #0f172a !important; }
+    body[data-theme="light"] .text-slate-500 { color: var(--text-muted) !important; }
+    body[data-theme="light"] .text-slate-400,
+    body[data-theme="light"] .text-slate-300 { color: var(--text-soft) !important; }
+    body[data-theme="light"] .bg-slate-950\/70,
+    body[data-theme="light"] .bg-slate-950\/60,
+    body[data-theme="light"] .bg-slate-900,
+    body[data-theme="light"] .bg-white\/5 { background-color: var(--surface-bg) !important; }
+    body[data-theme="light"] .border-slate-800,
+    body[data-theme="light"] .border-slate-700 { border-color: var(--surface-border) !important; }
+    body[data-theme="light"] input,
+    body[data-theme="light"] .rounded-2xl.bg-slate-900,
+    body[data-theme="light"] .rounded-2xl.bg-white\/5 { background: var(--surface-strong) !important; }
+    body[data-theme="light"] .rounded-2xl.bg-slate-900,
+    body[data-theme="light"] .rounded-2xl.bg-white\/5,
+    body[data-theme="light"] table thead,
+    body[data-theme="light"] tbody tr { color: #0f172a !important; }
+    body[data-theme="light"] #profileDropdown { background: #ffffff !important; border-color: var(--surface-border) !important; }
+    body[data-theme="light"] .inline-flex.items-center.gap-2.rounded-full.bg-emerald-500\/10 { background: rgba(16, 185, 129, 0.12) !important; }
+    .theme-toggle-icon-light { display: none; }
+    body[data-theme="light"] .theme-toggle-icon-light { display: inline-block; }
+    body[data-theme="light"] .theme-toggle-icon-dark { display: none; }
+    .pipeline-frame {
+      width: 100%;
+      min-height: 720px;
+      border: 0;
+      border-radius: 1.5rem;
+      background: transparent;
+    }
+  </style>
 </head>
-<body class="bg-[#0a0a0a] text-white font-sans overflow-hidden">
-    <div class="flex h-screen">
-        <!-- SIDEBAR – no user footer -->
-        <div class="w-72 bg-[#111111] border-r border-gray-800 flex flex-col">
-            <div class="px-8 py-6 border-b border-gray-800 flex items-center gap-3">
-                <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center text-2xl font-bold">C</div>
-                <span class="text-3xl font-semibold tracking-tighter">Clearoid</span>
-            </div>
-            <div class="flex-1 overflow-y-auto py-6 px-3">
-                <div class="px-5 mb-2 text-xs font-semibold text-gray-500 tracking-widest">CORE</div>
-                <a href="#" onclick="switchPage(0); return false;" class="sidebar-link flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-white/5 rounded-2xl mb-1 active">
-                    <i class="fa-solid fa-house w-5"></i>
-                    <span class="font-medium">Dashboard</span>
-                </a>
-                <a href="/index.html" class="sidebar-link flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-white/5 rounded-2xl mb-1">
-                    <i class="fa-solid fa-home w-5"></i>
-                    <span class="font-medium">Home</span>
-                </a>
-                <a href="/pages/upload.html" class="sidebar-link flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-white/5 rounded-2xl mb-1">
-                    <i class="fa-solid fa-upload w-5"></i>
-                    <span class="font-medium">Upload</span>
-                </a>
-                <a href="/pages/history.html" class="sidebar-link flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-white/5 rounded-2xl mb-1">
-                    <i class="fa-solid fa-clock-rotate-left w-5"></i>
-                    <span class="font-medium">History</span>
-                </a>
-                <a href="/pages/export.html" class="sidebar-link flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-white/5 rounded-2xl mb-1">
-                    <i class="fa-solid fa-file-export w-5"></i>
-                    <span class="font-medium">Export</span>
-                </a>
-                <div class="px-5 mt-8 mb-2 text-xs font-semibold text-gray-500 tracking-widest">BUSINESS</div>
-                <a href="#" onclick="switchPage(4)" class="sidebar-link flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-white/5 rounded-2xl mb-1">
-                    <i class="fa-solid fa-folder w-5"></i>
-                    <span class="font-medium">Projects</span>
-                </a>
-                <a href="#" onclick="switchPage(5)" class="sidebar-link flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-white/5 rounded-2xl mb-1">
-                    <i class="fa-solid fa-list-check w-5"></i>
-                    <span class="font-medium">My Tasks</span>
-                </a>
-                <a href="#" onclick="switchPage(6)" class="sidebar-link flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-white/5 rounded-2xl mb-1">
-                    <i class="fa-solid fa-diagram-project w-5"></i>
-                    <span class="font-medium">Pipeline</span>
-                </a>
-                <div class="px-5 mt-8 mb-2 text-xs font-semibold text-gray-500 tracking-widest">INSIGHTS</div>
-                <a href="#" onclick="switchPage(7)" class="sidebar-link flex items-center gap-3 px-5 py-3 text-gray-300 hover:bg-white/5 rounded-2xl mb-1">
-                    <i class="fa-solid fa-chart-pie w-5"></i>
-                    <span class="font-medium">Reports</span>
-                </a>
-            </div>
+<body class="min-h-screen text-white" data-theme="dark">
+  <div class="flex min-h-screen flex-col xl:flex-row">
+    <aside class="w-full border-b border-slate-800 bg-slate-950/70 xl:w-72 xl:border-b-0 xl:border-r">
+      <div class="flex items-center gap-4 border-b border-slate-800 px-6 py-6">
+        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 text-lg font-extrabold">C</div>
+        <div>
+          <div class="text-2xl font-extrabold tracking-tight">Clearoid</div>
+          <div class="text-sm text-slate-400">Duplicate intelligence</div>
         </div>
-
-        <!-- MAIN CONTENT -->
-        <div class="flex-1 flex flex-col">
-            <!-- TOP NAV – only profile avatar on right -->
-            <div class="h-16 border-b border-gray-800 bg-[#111111] flex items-center justify-end px-8">
-                <div onclick="toggleProfileDropdown()" id="profileTrigger"
-                     class="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-lg font-bold cursor-pointer hover:ring-4 hover:ring-purple-500/30 transition-all">
-                    You
-                </div>
-            </div>
-
-            <div class="flex-1 overflow-auto p-8" id="mainContent">
-                <!-- Dashboard (page-0) -->
-                <div id="page-0">
-                    <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <h1 class="text-4xl font-semibold">Dashboard</h1>
-                            <p id="dashboardOverviewSub" class="text-gray-400">Overview • Live</p>
-                        </div>
-                        <div class="flex items-center gap-3 text-sm">
-                            <div class="bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-3xl flex items-center gap-2">
-                                <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                                All systems live
-                            </div>
-                            <button onclick="refreshDashboard()"
-                                    class="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-5 py-2 rounded-3xl">
-                                <i class="fa-solid fa-rotate"></i>
-                                Refresh
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Stats -->
-                    <div class="grid grid-cols-5 gap-6 mb-10">
-                        <div class="stat-card bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-3xl p-6">
-                            <div class="text-gray-400 text-sm">Total Titles</div>
-                            <div class="text-5xl font-semibold mt-3" id="totalTitles">0</div>
-                            <div class="text-emerald-400 text-sm flex items-center gap-1 mt-4">
-                                <i class="fa-solid fa-database"></i>
-                                <span id="totalChange">Live data</span>
-                            </div>
-                        </div>
-                        <div class="stat-card bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-3xl p-6">
-                            <div class="text-gray-400 text-sm">Unique Titles</div>
-                            <div class="text-5xl font-semibold mt-3 text-emerald-400" id="uniqueTitles">0</div>
-                            <div class="text-emerald-400 text-sm flex items-center gap-1 mt-4">
-                                <span id="uniquePercent">0%</span> of total
-                            </div>
-                        </div>
-                        <div class="stat-card bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-3xl p-6">
-                            <div class="text-gray-400 text-sm">Duplicates Found</div>
-                            <div class="text-5xl font-semibold mt-3 text-rose-400" id="duplicateTitles">0</div>
-                            <div class="text-rose-400 text-sm flex items-center gap-1 mt-4">
-                                <span id="duplicatePercent">0%</span> of total
-                            </div>
-                        </div>
-                        <div class="stat-card bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-3xl p-6">
-                            <div class="text-gray-400 text-sm">Active Clusters</div>
-                            <div class="text-5xl font-semibold mt-3" id="activeClusters">0</div>
-                            <div class="text-amber-400 text-sm flex items-center gap-1 mt-4">
-                                <span id="avgCluster">Calculating...</span>
-                            </div>
-                        </div>
-                        <div class="stat-card bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-3xl p-6">
-                            <div class="text-gray-400 text-sm">Bulk Uploads</div>
-                            <div class="text-5xl font-semibold mt-3" id="bulkUploads">0</div>
-                            <div class="text-emerald-400 text-sm flex items-center gap-1 mt-4">
-                                <i class="fa-solid fa-file-excel"></i>
-                                <span id="uploadStatus">Ready</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Tabs -->
-                    <div class="flex border-b border-gray-800 mb-8">
-                        <button onclick="switchTab(0)" id="tab-0" class="tab-active px-8 py-4 text-sm font-medium">Overview</button>
-                        <button onclick="switchTab(1)" id="tab-1" class="px-8 py-4 text-sm font-medium text-gray-400 hover:text-white">Data & Workflows</button>
-                        <button onclick="switchTab(2)" id="tab-2" class="px-8 py-4 text-sm font-medium text-gray-400 hover:text-white">CRM / Projects</button>
-                    </div>
-                    <!-- TAB 0: OVERVIEW -->
-                    <div id="tab-content-0">
-                        <div class="grid grid-cols-12 gap-6">
-                            <!-- High Priority -->
-                            <div class="col-span-7">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="font-semibold">High Priority Items</h3>
-                                    <span class="text-xs text-gray-500">3 need attention</span>
-                                </div>
-                                <div class="space-y-4">
-                                    <div class="bg-gray-900 border border-rose-500/30 rounded-3xl p-6 flex items-start gap-6">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-3">
-                                                <span class="px-3 py-1 bg-rose-500/10 text-rose-400 text-xs rounded-full">Cluster</span>
-                                                <span class="text-sm text-gray-400">Project Alpha • 4,200 titles</span>
-                                            </div>
-                                            <div class="mt-2 text-lg font-medium">91% similarity cluster needs review</div>
-                                        </div>
-                                        <button onclick="reviewCluster()"
-                                                class="bg-rose-600 hover:bg-rose-500 px-8 py-3 rounded-2xl text-sm font-medium">Review Now</button>
-                                    </div>
-                                   
-                                    <div class="bg-gray-900 border border-amber-500/30 rounded-3xl p-6 flex items-start gap-6">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-3">
-                                                <span class="px-3 py-1 bg-amber-500/10 text-amber-400 text-xs rounded-full">Workflow</span>
-                                                <span class="text-sm text-gray-400">Daily Cleanup</span>
-                                            </div>
-                                            <div class="mt-2 text-lg font-medium">Failed 47 minutes ago</div>
-                                        </div>
-                                        <button onclick="retryWorkflow()"
-                                                class="bg-amber-600 hover:bg-amber-500 px-8 py-3 rounded-2xl text-sm font-medium">Retry</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Recent Clusters -->
-                            <div class="col-span-5">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="font-semibold">Recent Clusters</h3>
-                                    <a href="#" onclick="viewHistory()" class="text-blue-400 text-sm hover:underline">View all →</a>
-                                </div>
-                                <div class="space-y-6">
-                                    <div class="flex gap-4">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center text-2xl">α</div>
-                                        <div class="flex-1">
-                                            <div class="font-medium">Alpha Project 2026</div>
-                                            <div class="text-xs text-gray-400">5 variants • 92% match</div>
-                                            <div class="mt-3 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                                                <div class="cluster-bar w-[92%]"></div>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-emerald-400 text-xs">Auto-Merged</div>
-                                        </div>
-                                    </div>
-                                   
-                                    <div class="flex gap-4">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-400 rounded-2xl flex items-center justify-center text-2xl">Q</div>
-                                        <div class="flex-1">
-                                            <div class="font-medium">Q4 Marketing Campaign</div>
-                                            <div class="text-xs text-gray-400">8 variants • 87% match</div>
-                                            <div class="mt-3 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                                                <div class="cluster-bar w-[87%]"></div>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-amber-400 text-xs">Needs Review</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- TAB 1: DATA & WORKFLOWS -->
-                    <div id="tab-content-1" class="hidden">
-                        <div class="grid grid-cols-12 gap-6">
-                            <div class="col-span-7">
-                                <h3 class="font-semibold mb-4">Your Active Workflows</h3>
-                                <div class="space-y-4">
-                                    <div class="bg-gray-900 rounded-3xl p-6 flex items-center justify-between">
-                                        <div>
-                                            <div class="font-medium">Daily Duplicate Cleanup</div>
-                                            <div class="text-sm text-gray-400">Auto-merge >94% • Runs at 2 AM</div>
-                                        </div>
-                                        <div class="text-emerald-400 text-sm font-medium">Active • 2h ago</div>
-                                    </div>
-                                    <div class="bg-gray-900 rounded-3xl p-6 flex items-center justify-between">
-                                        <div>
-                                            <div class="font-medium">New Upload → Notify Team</div>
-                                            <div class="text-sm text-gray-400">On upload → Scan → Slack admin</div>
-                                        </div>
-                                        <div class="text-amber-400 text-sm font-medium">Manual</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-span-5">
-                                <h3 class="font-semibold mb-4">Bulk Upload Progress</h3>
-                                <div class="bg-gray-900 rounded-3xl p-8">
-                                    <div class="flex justify-between text-sm mb-3">
-                                        <span>Marketing Masterlist 2026</span>
-                                        <span class="text-emerald-400">3,412 / 5,000</span>
-                                    </div>
-                                    <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
-                                        <div class="h-full w-[68%] bg-gradient-to-r from-blue-500 to-cyan-400"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- TAB 2: CRM / PROJECTS -->
-                    <div id="tab-content-2" class="hidden">
-                        <div class="grid grid-cols-12 gap-6">
-                            <div class="col-span-4">
-                                <div class="bg-gray-900 rounded-3xl p-6 h-full">
-                                    <div class="text-sm text-gray-400 mb-6">Active Projects</div>
-                                    <div class="text-6xl font-semibold">14</div>
-                                    <div class="text-emerald-400 text-sm mt-1">+3 this month</div>
-                                </div>
-                            </div>
-                            <div class="col-span-4">
-                                <div class="bg-gray-900 rounded-3xl p-6 h-full">
-                                    <div class="text-sm text-gray-400 mb-6">Tasks Due Soon</div>
-                                    <div class="text-6xl font-semibold text-rose-400">7</div>
-                                    <div class="text-rose-400 text-sm mt-1">2 overdue</div>
-                                </div>
-                            </div>
-                            <div class="col-span-4">
-                                <div class="bg-gray-900 rounded-3xl p-6 h-full">
-                                    <div class="text-sm text-gray-400 mb-6">Pipeline Value</div>
-                                    <div class="text-6xl font-semibold">$347k</div>
-                                    <div class="text-emerald-400 text-sm mt-1">+18% Q1</div>
-                                </div>
-                            </div>
-                           
-                            <!-- Pipeline Visual -->
-                            <div class="col-span-12 mt-4">
-                                <div class="bg-gray-900 rounded-3xl p-8">
-                                    <h4 class="font-medium mb-6">Automation Pipeline</h4>
-                                    <div class="flex items-center gap-8">
-                                        <div class="text-center">
-                                            <div class="w-16 h-16 mx-auto bg-blue-500/10 rounded-2xl flex items-center justify-center text-3xl mb-2">📤</div>
-                                            <div class="text-xs text-gray-400">Upload</div>
-                                        </div>
-                                        <div class="flex-1 h-px bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400"></div>
-                                        <div class="text-center">
-                                            <div class="w-16 h-16 mx-auto bg-cyan-500/10 rounded-2xl flex items-center justify-center text-3xl mb-2">🔍</div>
-                                            <div class="text-xs text-gray-400">Scan</div>
-                                        </div>
-                                        <div class="flex-1 h-px bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400"></div>
-                                        <div class="text-center">
-                                            <div class="w-16 h-16 mx-auto bg-emerald-500/10 rounded-2xl flex items-center justify-center text-3xl mb-2">🔗</div>
-                                            <div class="text-xs text-gray-400">Merge</div>
-                                        </div>
-                                        <div class="flex-1 h-px bg-gradient-to-r from-emerald-400 via-violet-400 to-fuchsia-400"></div>
-                                        <div class="text-center">
-                                            <div class="w-16 h-16 mx-auto bg-violet-500/10 rounded-2xl flex items-center justify-center text-3xl mb-2">📊</div>
-                                            <div class="text-xs text-gray-400">CRM Sync</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Index page -->
-                <div id="page-8" class="hidden">
-                    <h2 class="text-3xl font-semibold mb-2">Index</h2>
-                    <p class="text-gray-400 mb-8">Overview of indexed records, vector embeddings, similarity clusters and deduplication metadata.</p>
-                   
-                    <div class="bg-[#1a1d29] rounded-3xl p-8">
-                        <h3 class="text-xl font-medium mb-6">Index Statistics</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="p-8 bg-[#0f1117] rounded-2xl">
-                                <div class="text-gray-400 text-sm mb-3">Total Indexed Records</div>
-                                <div class="text-5xl font-bold mt-2" id="indexTotalRecords">0</div>
-                                <div class="text-xs text-gray-500 mt-3">Live from database</div>
-                            </div>
-                            <div class="p-8 bg-[#0f1117] rounded-2xl">
-                                <div class="text-gray-400 text-sm mb-3">Vectors / Embeddings</div>
-                                <div class="text-5xl font-bold mt-2" id="indexVectors">0</div>
-                                <div class="text-xs text-gray-500 mt-3">ML embeddings stored</div>
-                            </div>
-                            <div class="p-8 bg-[#0f1117] rounded-2xl">
-                                <div class="text-gray-400 text-sm mb-3">Average Similarity Score</div>
-                                <div class="text-5xl font-bold mt-2" id="indexSimilarity">0.000</div>
-                                <div class="text-xs text-gray-500 mt-3">Across all clusters</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Uploads page -->
-                <div id="page-1" class="hidden">
-                    <div class="max-w-2xl mx-auto bg-gray-900 rounded-3xl p-12 text-center">
-                        <h2 class="text-3xl font-semibold mb-4">Uploads</h2>
-                        <p class="text-gray-400 mb-8">Drag & drop your Excel or CSV here</p>
-                        <button onclick="fakeUpload()" class="bg-white text-black font-semibold px-10 py-4 rounded-3xl text-lg">Upload File</button>
-                        <div class="mt-10 text-xs text-gray-500">Supported: .xlsx, .csv • Max 50,000 rows</div>
-                    </div>
-                </div>
-
-                <!-- History page -->
-                <div id="page-2" class="hidden">
-                    <h2 class="text-3xl font-semibold mb-8">Submission History</h2>
-                    <div class="bg-gray-900 rounded-3xl overflow-hidden">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="border-b border-gray-800">
-                                    <th class="text-left py-6 px-8 font-normal text-gray-400">Date</th>
-                                    <th class="text-left py-6 px-8 font-normal text-gray-400">Title</th>
-                                    <th class="text-left py-6 px-8 font-normal text-gray-400">Records</th>
-                                    <th class="text-left py-6 px-8 font-normal text-gray-400">Duplicates</th>
-                                    <th class="text-left py-6 px-8 font-normal text-gray-400">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboardHistoryRows" class="divide-y divide-gray-800">
-                                <tr>
-                                    <td colspan="5" class="py-6 px-8 text-sm text-gray-400">Loading...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Export page -->
-                <div id="page-3" class="hidden">
-                    <div class="max-w-md mx-auto text-center py-20">
-                        <h2 class="text-3xl font-semibold mb-3">Export Center</h2>
-                        <p class="text-gray-400">All your clean data is ready</p>
-                        <button onclick="exportData()"
-                                class="mt-10 bg-white text-black font-semibold px-12 py-5 rounded-3xl text-lg flex items-center gap-3 mx-auto">
-                            <i class="fa-solid fa-download"></i>
-                            Download Clean List (Excel)
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Projects, Tasks, Pipeline, Reports -->
-                <div id="page-4" class="hidden">
-                    <div class="flex justify-between items-center mb-8">
-                        <div>
-                            <h2 class="text-3xl font-semibold">Projects</h2>
-                            <p class="text-gray-400 mt-2">Create or manage your active projects</p>
-                        </div>
-                        <button onclick="createNewProject()" class="bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-3xl font-medium flex items-center gap-2">
-                            <i class="fa-solid fa-plus"></i>
-                            New Project
-                        </button>
-                    </div>
-                    <div id="projectsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-                </div>
-               
-                <div id="page-5" class="hidden">
-                    <div class="flex justify-between items-center mb-8">
-                        <div>
-                            <h2 class="text-3xl font-semibold">My Tasks</h2>
-                            <p class="text-gray-400 mt-2">Manage and track your tasks</p>
-                        </div>
-                        <button onclick="createNewTask()" class="bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-3xl font-medium flex items-center gap-2">
-                            <i class="fa-solid fa-plus"></i>
-                            New Task
-                        </button>
-                    </div>
-                    <div id="tasksList" class="space-y-4"></div>
-                </div>
-                
-                <div id="page-6" class="hidden">
-                    <h2 class="text-3xl font-semibold mb-2">Pipeline</h2>
-                    <p class="text-gray-400 mb-8">End-to-end automation flow</p>
-                    
-                    <div class="bg-[#1a1d29] rounded-3xl p-12 overflow-x-auto">
-                        <div class="flex items-center gap-8 min-w-max">
-                            <!-- Trigger -->
-                            <div class="flex flex-col items-center">
-                                <div class="w-32 h-32 bg-gradient-to-br from-orange-500 to-red-500 rounded-3xl flex items-center justify-center text-5xl mb-4 shadow-lg">
-                                    ⚡
-                                </div>
-                                <div class="text-center">
-                                    <div class="font-semibold text-lg">Form Trigger</div>
-                                    <div class="text-xs text-gray-400 mt-1">On 'Create User'</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Arrow -->
-                            <div class="flex items-center">
-                                <div class="w-16 h-1 bg-gradient-to-r from-orange-500 to-blue-500"></div>
-                                <div class="w-3 h-3 bg-blue-500 rotate-45 transform translate-x-[-6px]"></div>
-                            </div>
-                            
-                            <!-- AI Agent -->
-                            <div class="flex flex-col items-center">
-                                <div class="w-40 h-40 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-3xl flex flex-col items-center justify-center text-5xl mb-4 shadow-lg border-4 border-blue-400">
-                                    <div class="text-6xl">🧠</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="font-semibold text-lg">AI Agent</div>
-                                    <div class="text-xs text-gray-400 mt-1">Tools Agent</div>
-                                </div>
-                                
-                                <!-- AI Tools -->
-                                <div class="flex gap-4 mt-6">
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center text-2xl">🤖</div>
-                                        <div class="text-xs text-gray-400 mt-2">Anthropic</div>
-                                    </div>
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center text-2xl">🧠</div>
-                                        <div class="text-xs text-gray-400 mt-2">Memory</div>
-                                    </div>
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center text-2xl">🔐</div>
-                                        <div class="text-xs text-gray-400 mt-2">Entra ID</div>
-                                    </div>
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center text-2xl">📋</div>
-                                        <div class="text-xs text-gray-400 mt-2">Jira</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Arrow -->
-                            <div class="flex items-center">
-                                <div class="w-16 h-1 bg-gradient-to-r from-cyan-400 to-green-500"></div>
-                                <div class="w-3 h-3 bg-green-500 rotate-45 transform translate-x-[-6px]"></div>
-                            </div>
-                            
-                            <!-- Decision Node -->
-                            <div class="flex flex-col items-center relative">
-                                <div class="w-32 h-32 bg-gradient-to-br from-green-500 to-emerald-400 rounded-3xl flex items-center justify-center text-4xl mb-4 shadow-lg transform rotate-45">
-                                    <div class="transform -rotate-45 text-5xl">❓</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="font-semibold text-lg">Decision</div>
-                                    <div class="text-xs text-gray-400 mt-1">Is manager?</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Branches -->
-                            <div class="flex flex-col gap-24 ml-8">
-                                <!-- YES Branch -->
-                                <div class="flex items-center gap-4">
-                                    <div class="flex flex-col items-center">
-                                        <div class="text-emerald-400 font-bold mb-2">YES</div>
-                                        <div class="w-16 h-1 bg-emerald-400"></div>
-                                    </div>
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-28 h-28 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center text-4xl shadow-lg">
-                                            💬
-                                        </div>
-                                        <div class="text-center mt-3">
-                                            <div class="font-semibold">Add to Slack</div>
-                                            <div class="text-xs text-gray-400 mt-1">Invite channel</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- NO Branch -->
-                                <div class="flex items-center gap-4">
-                                    <div class="flex flex-col items-center">
-                                        <div class="text-rose-400 font-bold mb-2">NO</div>
-                                        <div class="w-16 h-1 bg-rose-400"></div>
-                                    </div>
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-28 h-28 bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl flex items-center justify-center text-4xl shadow-lg">
-                                            👤
-                                        </div>
-                                        <div class="text-center mt-3">
-                                            <div class="font-semibold">Update Profile</div>
-                                            <div class="text-xs text-gray-400 mt-1">Standard user</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div id="page-7" class="hidden">
-                    <h2 class="text-3xl font-semibold mb-2">Reports</h2>
-                    <p class="text-gray-400 mb-8">Detailed analytics & insights</p>
-                    
-                    <!-- Stats Overview -->
-                    <div class="grid grid-cols-4 gap-6 mb-8">
-                        <div class="bg-gray-900 rounded-3xl p-6">
-                            <div class="text-gray-400 text-sm mb-2">Total Records</div>
-                            <div class="text-4xl font-bold" id="reportTotalRecords">0</div>
-                            <div class="text-emerald-400 text-sm mt-2">+12% this month</div>
-                        </div>
-                        <div class="bg-gray-900 rounded-3xl p-6">
-                            <div class="text-gray-400 text-sm mb-2">Duplicates Found</div>
-                            <div class="text-4xl font-bold text-rose-400" id="reportDuplicates">0</div>
-                            <div class="text-rose-400 text-sm mt-2">-8% this month</div>
-                        </div>
-                        <div class="bg-gray-900 rounded-3xl p-6">
-                            <div class="text-gray-400 text-sm mb-2">Active Projects</div>
-                            <div class="text-4xl font-bold text-blue-400" id="reportProjects">0</div>
-                            <div class="text-blue-400 text-sm mt-2">3 new this week</div>
-                        </div>
-                        <div class="bg-gray-900 rounded-3xl p-6">
-                            <div class="text-gray-400 text-sm mb-2">Avg Similarity</div>
-                            <div class="text-4xl font-bold text-amber-400" id="reportSimilarity">0.91</div>
-                            <div class="text-amber-400 text-sm mt-2">High accuracy</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Charts Section -->
-                    <div class="grid grid-cols-2 gap-6 mb-8">
-                        <div class="bg-gray-900 rounded-3xl p-8">
-                            <h3 class="text-xl font-semibold mb-6">Upload Trends</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <div class="flex justify-between text-sm mb-2">
-                                        <span>January</span>
-                                        <span class="text-blue-400">4,892</span>
-                                    </div>
-                                    <div class="h-3 bg-gray-800 rounded-full overflow-hidden">
-                                        <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400" style="width: 85%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between text-sm mb-2">
-                                        <span>February</span>
-                                        <span class="text-blue-400">5,234</span>
-                                    </div>
-                                    <div class="h-3 bg-gray-800 rounded-full overflow-hidden">
-                                        <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400" style="width: 92%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between text-sm mb-2">
-                                        <span>March</span>
-                                        <span class="text-blue-400">3,421</span>
-                                    </div>
-                                    <div class="h-3 bg-gray-800 rounded-full overflow-hidden">
-                                        <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400" style="width: 60%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-gray-900 rounded-3xl p-8">
-                            <h3 class="text-xl font-semibold mb-6">Duplicate Detection Rate</h3>
-                            <div class="flex items-center justify-center h-48">
-                                <div class="relative w-48 h-48">
-                                    <svg class="transform -rotate-90" width="192" height="192">
-                                        <circle cx="96" cy="96" r="80" stroke="#1f2937" stroke-width="16" fill="none"/>
-                                        <circle cx="96" cy="96" r="80" stroke="url(#gradient)" stroke-width="16" fill="none" stroke-dasharray="502" stroke-dashoffset="125" stroke-linecap="round"/>
-                                        <defs>
-                                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                <stop offset="0%" style="stop-color:#3b82f6"/>
-                                                <stop offset="100%" style="stop-color:#06b6d4"/>
-                                            </linearGradient>
-                                        </defs>
-                                    </svg>
-                                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                        <div class="text-4xl font-bold">75%</div>
-                                        <div class="text-sm text-gray-400">Accuracy</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Recent Activity -->
-                    <div class="bg-gray-900 rounded-3xl p-8">
-                        <h3 class="text-xl font-semibold mb-6">Recent Activity</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center gap-4 p-4 bg-gray-800/50 rounded-2xl">
-                                <div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-2xl">📤</div>
-                                <div class="flex-1">
-                                    <div class="font-medium">Bulk upload completed</div>
-                                    <div class="text-sm text-gray-400">Marketing_List_2026.xlsx • 5,234 records</div>
-                                </div>
-                                <div class="text-sm text-gray-400">2 hours ago</div>
-                            </div>
-                            <div class="flex items-center gap-4 p-4 bg-gray-800/50 rounded-2xl">
-                                <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-2xl">✅</div>
-                                <div class="flex-1">
-                                    <div class="font-medium">Duplicate cluster merged</div>
-                                    <div class="text-sm text-gray-400">Project Alpha • 47 duplicates resolved</div>
-                                </div>
-                                <div class="text-sm text-gray-400">5 hours ago</div>
-                            </div>
-                            <div class="flex items-center gap-4 p-4 bg-gray-800/50 rounded-2xl">
-                                <div class="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-2xl">📊</div>
-                                <div class="flex-1">
-                                    <div class="font-medium">Weekly report generated</div>
-                                    <div class="text-sm text-gray-400">Feb 12-18 • 12,847 records processed</div>
-                                </div>
-                                <div class="text-sm text-gray-400">1 day ago</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <footer class="mt-12"></footer>
-            </div>
+      </div>
+      <nav class="space-y-8 px-4 py-6">
+        <div>
+          <div class="px-4 pb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Core</div>
+          <div class="space-y-2">
+            <a href="#" onclick="switchPage(0); return false;" class="sidebar-link is-active flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition"><i class="fa-solid fa-chart-line w-5"></i><span>Dashboard</span></a>
+            <a href="/index.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition"><i class="fa-solid fa-house w-5"></i><span>Home</span></a>
+            <a href="/pages/upload.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition"><i class="fa-solid fa-upload w-5"></i><span>Upload</span></a>
+            <a href="/pages/history.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition"><i class="fa-solid fa-clock-rotate-left w-5"></i><span>History</span></a>
+            <a href="/pages/export.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition"><i class="fa-solid fa-file-export w-5"></i><span>Export</span></a>
+          </div>
         </div>
+        <div>
+          <div class="px-4 pb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Workspace</div>
+          <div class="space-y-2">
+            <a href="#" onclick="switchPage(4); return false;" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition"><i class="fa-solid fa-folder-tree w-5"></i><span>Projects</span></a>
+            <a href="#" onclick="switchPage(5); return false;" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition"><i class="fa-solid fa-list-check w-5"></i><span>Tasks</span></a>
+            <a href="#" onclick="switchPage(6); return false;" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition"><i class="fa-solid fa-diagram-project w-5"></i><span>Pipeline</span></a>
+            <a href="#" onclick="switchPage(7); return false;" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition"><i class="fa-solid fa-chart-pie w-5"></i><span>Reports</span></a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="flex flex-1 flex-col">
+      <header class="border-b border-slate-800 bg-slate-950/60 px-6 py-4 xl:px-8">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p class="text-sm font-medium uppercase tracking-[0.22em] text-slate-500">Operations dashboard</p>
+            <h1 class="mt-2 text-3xl font-extrabold tracking-tight">Clearoid control center</h1>
+            <p id="dashboardOverviewSub" class="mt-2 text-sm text-slate-400">Overview as of today. Live.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button id="themeToggle" onclick="toggleTheme()" class="rounded-full border border-slate-700 bg-white/5 px-4 py-2 text-sm font-semibold">
+              <span class="theme-toggle-icon-dark">Light mode</span>
+              <span class="theme-toggle-icon-light">Dark mode</span>
+            </button>
+            <div class="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-300"><span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>All systems live</div>
+            <button onclick="refreshDashboard()" class="rounded-full border border-slate-700 bg-white/5 px-4 py-2 text-sm font-semibold">Refresh</button>
+            <button id="profileTrigger" onclick="toggleProfileDropdown()" class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-pink-500 text-sm font-bold">U</button>
+          </div>
+        </div>
+      </header>
+
+      <main id="mainContent" class="flex-1 px-6 py-6 xl:px-8">
+        <section id="page-0" class="space-y-8">
+          <div class="grid gap-5 md:grid-cols-2 2xl:grid-cols-5">
+            <article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Total Titles</div><div id="totalTitles" class="mt-4 text-5xl font-extrabold">0</div><div id="totalChange" class="mt-4 text-sm text-emerald-300">Updated just now</div></article>
+            <article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Unique Titles</div><div id="uniqueTitles" class="mt-4 text-5xl font-extrabold text-emerald-300">0</div><div class="mt-4 text-sm text-slate-400"><span id="uniquePercent">0%</span> of total</div></article>
+            <article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Duplicates Found</div><div id="duplicateTitles" class="mt-4 text-5xl font-extrabold text-rose-300">0</div><div class="mt-4 text-sm text-slate-400"><span id="duplicatePercent">0%</span> of total</div></article>
+            <article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Active Clusters</div><div id="activeClusters" class="mt-4 text-5xl font-extrabold">0</div><div id="avgCluster" class="mt-4 text-sm text-amber-300">Average 0 records</div></article>
+            <article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Bulk Uploads</div><div id="bulkUploads" class="mt-4 text-5xl font-extrabold">0</div><div id="uploadStatus" class="mt-4 text-sm text-cyan-300">Ready</div></article>
+          </div>
+
+          <div class="panel rounded-3xl p-6">
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div class="max-w-2xl">
+                <div class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Quick check</div>
+                <h2 class="mt-3 text-2xl font-bold">Validate a project title before submission</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-400">Enter a title, check for similarity, then move to bulk upload or history review.</p>
+              </div>
+              <div class="grid w-full gap-3 lg:max-w-2xl lg:grid-cols-[1fr_auto_auto]">
+                <input id="quickTitle" type="text" placeholder="Enter project title" class="min-h-[52px] rounded-2xl border border-slate-700 bg-slate-900 px-4 text-white placeholder:text-slate-500 focus:border-blue-400 focus:outline-none">
+                <button onclick="checkDuplicate()" class="rounded-2xl bg-blue-500 px-5 py-3 text-sm font-semibold">Check Duplicate</button>
+                <button onclick="uploadExcel()" class="rounded-2xl border border-slate-700 bg-white/5 px-5 py-3 text-sm font-semibold">Bulk Upload</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-b border-slate-800">
+            <div class="flex flex-wrap gap-6 text-sm font-semibold">
+              <button id="tab-0" onclick="switchTab(0)" class="tab-active px-1 pb-4">Overview</button>
+              <button id="tab-1" onclick="switchTab(1)" class="px-1 pb-4 text-slate-400">Data and workflows</button>
+              <button id="tab-2" onclick="switchTab(2)" class="px-1 pb-4 text-slate-400">CRM and projects</button>
+            </div>
+          </div>
+
+          <section id="tab-content-0" class="grid gap-6 xl:grid-cols-[1.35fr_1fr]">
+            <div class="space-y-6">
+              <article class="panel rounded-3xl p-6"><div class="flex items-center justify-between gap-4"><div><div class="text-xs font-semibold uppercase tracking-[0.18em] text-rose-300">Priority review</div><h3 class="mt-4 text-xl font-bold">91% similarity cluster needs review</h3><p class="mt-2 text-sm text-slate-400">Project Alpha, 4,200 titles, awaiting reviewer approval.</p></div><button onclick="reviewCluster()" class="rounded-2xl bg-rose-500 px-5 py-3 text-sm font-semibold">Review now</button></div></article>
+              <article class="panel rounded-3xl p-6"><div class="flex items-center justify-between gap-4"><div><div class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Workflow</div><h3 class="mt-4 text-xl font-bold">Daily cleanup job needs retry</h3><p class="mt-2 text-sm text-slate-400">The nightly cleanup workflow failed 47 minutes ago.</p></div><button onclick="retryWorkflow()" class="rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950">Retry</button></div></article>
+              <article class="panel rounded-3xl p-6">
+                <div class="flex items-center justify-between"><div><h3 class="text-xl font-bold">Recent submission history</h3><p class="mt-2 text-sm text-slate-400">Status labels and aligned columns.</p></div><a href="/pages/history.html" class="text-sm font-semibold text-blue-300">Open full history</a></div>
+                <div class="mt-6 overflow-x-auto rounded-2xl border border-slate-700">
+                  <table class="min-w-full divide-y divide-slate-700 text-left">
+                    <thead class="bg-white/5 text-sm text-slate-300"><tr><th class="px-5 py-4 font-semibold">Date</th><th class="px-5 py-4 font-semibold">Title</th><th class="px-5 py-4 font-semibold">Records</th><th class="px-5 py-4 font-semibold">Duplicates</th><th class="px-5 py-4 font-semibold">Status</th></tr></thead>
+                    <tbody id="dashboardHistoryRows" class="divide-y divide-slate-700"><tr><td colspan="5" class="px-5 py-6 text-sm text-slate-400">Loading recent submissions...</td></tr></tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+            <div class="space-y-6">
+              <article class="panel rounded-3xl p-6"><div class="flex items-center justify-between"><h3 class="text-xl font-bold">Recent clusters</h3><a href="/pages/history.html#review" class="text-sm font-semibold text-blue-300">View all</a></div><div class="mt-6 space-y-6"><div><div class="flex items-start justify-between gap-4"><div><div class="font-semibold">Alpha Project 2026</div><div class="mt-1 text-sm text-slate-400">5 variants, 92% match</div></div><span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">Auto merged</span></div><div class="mt-4 h-2 rounded-full bg-slate-800"><div class="h-2 w-[92%] rounded-full bg-gradient-to-r from-blue-400 to-cyan-300"></div></div></div><div><div class="flex items-start justify-between gap-4"><div><div class="font-semibold">Q4 Marketing Campaign</div><div class="mt-1 text-sm text-slate-400">8 variants, 87% match</div></div><span class="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-300">Needs review</span></div><div class="mt-4 h-2 rounded-full bg-slate-800"><div class="h-2 w-[87%] rounded-full bg-gradient-to-r from-sky-400 to-blue-300"></div></div></div></div></article>
+              <article class="panel rounded-3xl p-6"><h3 class="text-xl font-bold">Design audit summary</h3><div class="mt-5 grid gap-4 sm:grid-cols-2"><div class="rounded-2xl bg-slate-900 p-4"><div class="text-sm text-slate-400">Color roles</div><div class="mt-2 text-lg font-bold">Primary, success, warning, danger</div></div><div class="rounded-2xl bg-slate-900 p-4"><div class="text-sm text-slate-400">Typography</div><div class="mt-2 text-lg font-bold">Clear hierarchy and readable sizing</div></div><div class="rounded-2xl bg-slate-900 p-4"><div class="text-sm text-slate-400">Spacing</div><div class="mt-2 text-lg font-bold">Consistent 8px rhythm</div></div><div class="rounded-2xl bg-slate-900 p-4"><div class="text-sm text-slate-400">Navigation</div><div class="mt-2 text-lg font-bold">Persistent sidebar and active states</div></div></div></article>
+            </div>
+          </section>
+
+          <section id="tab-content-1" class="hidden grid gap-6 xl:grid-cols-2">
+            <article class="panel rounded-3xl p-6"><h3 class="text-xl font-bold">Workflow queue</h3><div class="mt-6 space-y-4"><div class="rounded-2xl bg-slate-900 p-5"><div class="flex items-center justify-between gap-4"><div><div class="font-semibold">Daily duplicate cleanup</div><div class="mt-1 text-sm text-slate-400">Auto-merge above 94%. Runs at 2:00 AM.</div></div><span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">Active</span></div></div><div class="rounded-2xl bg-slate-900 p-5"><div class="flex items-center justify-between gap-4"><div><div class="font-semibold">Upload notification</div><div class="mt-1 text-sm text-slate-400">New upload to scan to notify admin team.</div></div><span class="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-300">Manual</span></div></div></div></article>
+            <article class="panel rounded-3xl p-6"><h3 class="text-xl font-bold">Bulk upload progress</h3><div class="mt-6 rounded-2xl bg-slate-900 p-5"><div class="flex items-center justify-between text-sm text-slate-300"><span>Marketing master list 2026</span><span>3,412 / 5,000</span></div><div class="mt-4 h-3 rounded-full bg-slate-800"><div class="h-3 w-[68%] rounded-full bg-gradient-to-r from-cyan-300 to-blue-400"></div></div><div class="mt-4 text-sm text-slate-400">68% complete. 4 duplicate clusters generated so far.</div></div></article>
+          </section>
+
+          <section id="tab-content-2" class="hidden grid gap-6 lg:grid-cols-2 2xl:grid-cols-4">
+            <article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Total records</div><div id="indexTotalRecords" class="mt-3 text-4xl font-extrabold">0</div></article>
+            <article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Estimated vectors</div><div id="indexVectors" class="mt-3 text-4xl font-extrabold">0</div></article>
+            <article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Average similarity</div><div id="indexSimilarity" class="mt-3 text-4xl font-extrabold">0.000</div></article>
+            <article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Project actions</div><div class="mt-4 flex gap-3"><button onclick="createNewProject()" class="rounded-2xl bg-blue-500 px-4 py-3 text-sm font-semibold">New project</button><button onclick="viewHistory()" class="rounded-2xl border border-slate-700 bg-white/5 px-4 py-3 text-sm font-semibold">Review history</button></div></article>
+          </section>
+        </section>
+
+        <section id="page-4" class="hidden"><div class="flex items-center justify-between"><div><h2 class="text-3xl font-extrabold">Projects</h2><p class="mt-2 text-sm text-slate-400">Organize title groups and review spaces.</p></div><button onclick="createNewProject()" class="rounded-2xl bg-blue-500 px-5 py-3 text-sm font-semibold">New project</button></div><div id="projectsList" class="mt-6 grid gap-5 lg:grid-cols-2 2xl:grid-cols-3"><div class="panel rounded-3xl p-6"><div class="flex items-center gap-4"><div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 text-lg font-bold">A</div><div><div class="font-semibold">Alpha cleanup</div><div class="text-sm text-slate-400">Created today</div></div></div><div class="mt-4 text-sm text-slate-400">4,200 titles, 126 duplicates</div><div class="mt-5 flex gap-3"><button onclick="viewProject('Alpha cleanup')" class="rounded-2xl bg-white/5 px-4 py-2 text-sm font-semibold">View</button></div></div></div></section>
+        <section id="page-5" class="hidden"><div class="flex items-center justify-between"><div><h2 class="text-3xl font-extrabold">Tasks</h2><p class="mt-2 text-sm text-slate-400">Track review, merge, and export work.</p></div><button onclick="createNewTask()" class="rounded-2xl bg-blue-500 px-5 py-3 text-sm font-semibold">New task</button></div><div id="tasksList" class="mt-6 space-y-4"><div class="panel rounded-3xl p-6"><div class="flex items-center justify-between gap-4"><div><div class="font-semibold">Review duplicate cluster queue</div><div class="mt-2 text-sm text-slate-400">Due today</div></div><span class="rounded-full bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-300">High</span></div></div></div></section>
+        <section id="page-6" class="hidden space-y-6">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-3xl font-extrabold">Pipeline</h2>
+              <p class="mt-2 text-sm text-slate-400">Restored interactive workflow canvas.</p>
+            </div>
+            <a href="/pages/pipeline-embed.html" target="_blank" rel="noreferrer" class="rounded-2xl border border-slate-700 bg-white/5 px-5 py-3 text-sm font-semibold">Open full view</a>
+          </div>
+          <div class="panel rounded-3xl p-3">
+            <iframe id="pipelineFrame" class="pipeline-frame" src="/pages/pipeline-embed.html" title="Pipeline workflow"></iframe>
+          </div>
+        </section>
+        <section id="page-7" class="hidden"><div class="grid gap-5 md:grid-cols-2 2xl:grid-cols-4"><article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Total records</div><div id="reportTotalRecords" class="mt-3 text-4xl font-extrabold">0</div></article><article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Duplicates</div><div id="reportDuplicates" class="mt-3 text-4xl font-extrabold">0</div></article><article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Projects</div><div id="reportProjects" class="mt-3 text-4xl font-extrabold">0</div></article><article class="panel rounded-3xl p-6"><div class="text-sm text-slate-400">Avg similarity</div><div id="reportSimilarity" class="mt-3 text-4xl font-extrabold">0.000</div></article></div></section>
+      </main>
+
+      <footer class="mt-auto"></footer>
     </div>
+  </div>
 
-    <!-- PROFILE DROPDOWN -->
-    <div id="profileDropdown" class="hidden fixed top-20 right-8 w-72 bg-gray-900 border border-gray-700 rounded-3xl shadow-2xl py-2 z-50 dropdown">
-        <div class="py-2">
-            <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-white/5 text-sm">👤 Account</a>
-            <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-white/5 text-sm">⚙️ Settings</a>
-            <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-white/5 text-sm">⭐ Upgrade Plan</a>
-            <a href="#" class="flex items-center gap-4 px-6 py-3 hover:bg-white/5 text-sm">📊 Reports</a>
-        </div>
-        <div class="border-t border-gray-800 pt-2">
-            <a href="#" onclick="logout()" class="flex items-center gap-4 px-6 py-3 hover:bg-red-500/10 text-red-400 text-sm">Logout</a>
-        </div>
-    </div>
+  <div id="profileDropdown" class="hidden fixed right-6 top-24 z-50 w-72 rounded-3xl border border-slate-700 bg-slate-900 p-3">
+    <a href="#" class="block rounded-2xl px-4 py-3 text-sm text-slate-200 hover:bg-white/5">Account</a>
+    <a href="#" class="mt-1 block rounded-2xl px-4 py-3 text-sm text-slate-200 hover:bg-white/5">Settings</a>
+    <a href="#" class="mt-1 block rounded-2xl px-4 py-3 text-sm text-slate-200 hover:bg-white/5">Reports</a>
+    <button onclick="logout()" class="mt-2 w-full rounded-2xl bg-rose-500/10 px-4 py-3 text-left text-sm font-semibold text-rose-300 hover:bg-rose-500/20">Logout</button>
+  </div>
 
-    <script>
-        // Tab switching
-        function switchTab(n) {
-            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.remove('tab-active'));
-            document.getElementById(`tab-${n}`).classList.add('tab-active');
-           
-            document.getElementById('tab-content-0').classList.add('hidden');
-            document.getElementById('tab-content-1').classList.add('hidden');
-            document.getElementById('tab-content-2').classList.add('hidden');
-            document.getElementById(`tab-content-${n}`).classList.remove('hidden');
-        }
+  <script>
+    function switchTab(n) {
+      [0, 1, 2].forEach((i) => {
+        document.getElementById(`tab-${i}`).classList.remove("tab-active");
+        document.getElementById(`tab-${i}`).classList.add("text-slate-400");
+        document.getElementById(`tab-content-${i}`).classList.add("hidden");
+      });
+      document.getElementById(`tab-${n}`).classList.add("tab-active");
+      document.getElementById(`tab-${n}`).classList.remove("text-slate-400");
+      document.getElementById(`tab-content-${n}`).classList.remove("hidden");
+    }
 
-        // Page switching (sidebar)
-        function switchPage(n) {
-            document.querySelectorAll('#mainContent > div').forEach(div => div.classList.add('hidden'));
-            document.getElementById(`page-${n}`).classList.remove('hidden');
-           
-            // Highlight active sidebar
-            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('bg-white/5'));
-            const links = document.querySelectorAll('.sidebar-link');
-            if (n < links.length) links[n].classList.add('bg-white/5');
-        }
+    function switchPage(n) {
+      document.querySelectorAll("#mainContent > section").forEach((section) => section.classList.add("hidden"));
+      document.getElementById(`page-${n}`).classList.remove("hidden");
+      document.querySelectorAll(".sidebar-link").forEach((link) => link.classList.remove("is-active"));
+      const clicked = Array.from(document.querySelectorAll(".sidebar-link")).find((link) => link.getAttribute("onclick")?.includes(`switchPage(${n})`));
+      if (clicked) clicked.classList.add("is-active");
+    }
 
-        // Profile dropdown
-        function toggleProfileDropdown() {
-            document.getElementById('profileDropdown').classList.toggle('hidden');
-        }
+    function applyTheme(theme) {
+      const nextTheme = theme === "light" ? "light" : "dark";
+      document.body.setAttribute("data-theme", nextTheme);
+      localStorage.setItem("clearoid_theme", nextTheme);
+      const pipelineFrame = document.getElementById("pipelineFrame");
+      if (pipelineFrame && pipelineFrame.contentWindow) {
+        pipelineFrame.contentWindow.postMessage({ type: "clearoid-theme", theme: nextTheme }, window.location.origin);
+      }
+      // Re-render footer with new theme
+      if (window.renderFooter) window.renderFooter();
+    }
 
-        document.addEventListener('click', function(e) {
-            const trigger = document.getElementById('profileTrigger');
-            const dropdown = document.getElementById('profileDropdown');
-            if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
+    function toggleTheme() {
+      const currentTheme = document.body.getAttribute("data-theme") || "dark";
+      applyTheme(currentTheme === "dark" ? "light" : "dark");
+    }
 
-        function logout() {
-            if (confirm("Sign out of Clearoid?")) {
-                localStorage.removeItem('clearoid_user');
-                window.location.href = '/pages/signin.html';
-            }
-        }
+    function toggleProfileDropdown() { document.getElementById("profileDropdown").classList.toggle("hidden"); }
+    document.addEventListener("click", function (event) {
+      const trigger = document.getElementById("profileTrigger");
+      const dropdown = document.getElementById("profileDropdown");
+      if (trigger && dropdown && !trigger.contains(event.target) && !dropdown.contains(event.target)) dropdown.classList.add("hidden");
+    });
+    function logout() { if (confirm("Sign out of Clearoid?")) { localStorage.removeItem("clearoid_user"); window.location.href = "/pages/signin.html"; } }
 
-        async function checkDuplicate() {
-            const title = document.getElementById('quickTitle')?.value?.trim();
-            if (!title) {
-                showNotification('Enter a title first');
-                return;
-            }
-            try {
-                const response = await fetch('/api/check-duplicate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.detail || 'Check failed');
-                if (data.duplicate) {
-                    showNotification(`Duplicate found (score ${data.score})`);
-                } else {
-                    showNotification('Unique title');
-                }
-            } catch (error) {
-                showNotification(error.message || 'Check failed');
-            }
-        }
-        function uploadExcel() {
-            window.location.href = '/pages/upload.html';
-        }
-        function viewAllSubmissions() {
-            window.location.href = '/pages/history.html';
-        }
-        function reviewCluster() {
-            window.location.href = '/pages/history.html#review';
-        }
-        async function retryWorkflow() {
-            await loadDashboardData();
-            showNotification('Dashboard data refreshed');
-        }
-        function fakeUpload() {
-            window.location.href = '/pages/upload.html';
-        }
-        function exportData() {
-            window.location.href = '/pages/export.html?type=all';
-        }
-        function createNewProject() {
-            const projectName = prompt('Enter project name:');
-            if (!projectName) return;
-            
-            const projectsList = document.getElementById('projectsList');
-            if (projectsList.children.length === 0 || projectsList.children[0].textContent.includes('No projects')) {
-                projectsList.innerHTML = '';
-            }
-            
-            const projectCard = document.createElement('div');
-            projectCard.className = 'bg-gray-900 rounded-3xl p-6 border border-gray-800 hover:border-blue-500 transition';
-            projectCard.innerHTML = `
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center text-2xl font-bold">
-                        ${projectName.charAt(0).toUpperCase()}
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-semibold">${projectName}</div>
-                        <div class="text-xs text-gray-400">Created ${new Date().toLocaleDateString()}</div>
-                    </div>
-                </div>
-                <div class="text-sm text-gray-400 mb-4">0 titles • 0 duplicates</div>
-                <div class="flex gap-2">
-                    <button onclick="viewProject('${projectName}')" class="flex-1 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-sm">View</button>
-                    <button onclick="deleteProject(this)" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl text-sm">Delete</button>
-                </div>
-            `;
-            projectsList.appendChild(projectCard);
-            
-            showNotification(`✅ Project "${projectName}" created successfully`);
-        }
+    async function checkDuplicate() {
+      const title = document.getElementById("quickTitle")?.value?.trim();
+      if (!title) return showNotification("Enter a title first.");
+      try {
+        const response = await fetch("/api/check-duplicate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Check failed");
+        showNotification(data.duplicate ? `Duplicate found. Score ${data.score}.` : "Unique title.");
+      } catch (error) {
+        showNotification(error.message || "Check failed.");
+      }
+    }
 
-        function viewProject(name) {
-            window.location.href = `/pages/history.html?search=${encodeURIComponent(name)}`;
-        }
+    function uploadExcel() { window.location.href = "/pages/upload.html"; }
+    function viewAllSubmissions() { window.location.href = "/pages/history.html"; }
+    function viewHistory() { window.location.href = "/pages/history.html"; }
+    function reviewCluster() { window.location.href = "/pages/history.html#review"; }
+    async function retryWorkflow() { await loadDashboardData(); showNotification("Dashboard data refreshed."); }
+    function exportData() { window.location.href = "/pages/export.html?type=all"; }
 
-        function deleteProject(btn) {
-            if (confirm('Delete this project? This cannot be undone.')) {
-                btn.closest('.bg-gray-900').remove();
-                const projectsList = document.getElementById('projectsList');
-                if (projectsList.children.length === 0) {
-                    projectsList.innerHTML = '<div class="bg-gray-900 rounded-3xl p-6 text-center text-gray-500 col-span-3">No projects yet. Click "New Project" to create one.</div>';
-                }
-                showNotification('🗑️ Project deleted');
-            }
-        }
+    function createNewProject() {
+      const projectName = prompt("Enter project name:");
+      if (!projectName) return;
+      const projectsList = document.getElementById("projectsList");
+      const projectCard = document.createElement("div");
+      const safeProjectName = projectName.replace(/'/g, "\\'");
+      projectCard.className = "panel rounded-3xl p-6";
+      projectCard.innerHTML = `<div class="flex items-center gap-4"><div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 text-lg font-bold">${projectName.charAt(0).toUpperCase()}</div><div><div class="font-semibold">${projectName}</div><div class="text-sm text-slate-400">Created ${new Date().toLocaleDateString()}</div></div></div><div class="mt-4 text-sm text-slate-400">0 titles, 0 duplicates</div><div class="mt-5 flex gap-3"><button onclick="viewProject('${safeProjectName}')" class="rounded-2xl bg-white/5 px-4 py-2 text-sm font-semibold">View</button><button onclick="deleteProject(this)" class="rounded-2xl bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-300">Delete</button></div>`;
+      projectsList.appendChild(projectCard);
+      showNotification(`Project "${projectName}" created.`);
+    }
 
-        function createNewTask() {
-            const taskName = prompt('Enter task name:');
-            if (!taskName) return;
-            
-            const priority = prompt('Priority (High/Medium/Low):', 'Medium');
-            const dueDate = prompt('Due date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
-            
-            const tasksList = document.getElementById('tasksList');
-            if (tasksList.children.length === 0) {
-                tasksList.innerHTML = '';
-            }
-            
-            const priorityColors = {
-                'High': 'from-red-500 to-rose-500',
-                'Medium': 'from-amber-500 to-orange-500',
-                'Low': 'from-green-500 to-emerald-500'
-            };
-            
-            const taskCard = document.createElement('div');
-            taskCard.className = 'bg-gray-900 rounded-3xl p-6 border border-gray-800 hover:border-blue-500 transition';
-            taskCard.innerHTML = `
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-start gap-4 flex-1">
-                        <input type="checkbox" onchange="toggleTaskComplete(this)" class="mt-1 w-5 h-5 rounded">
-                        <div class="flex-1">
-                            <div class="font-semibold text-lg">${taskName}</div>
-                            <div class="text-sm text-gray-400 mt-1">Due: ${dueDate}</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="px-4 py-1 bg-gradient-to-r ${priorityColors[priority] || priorityColors['Medium']} rounded-full text-xs font-medium">${priority}</span>
-                        <button onclick="deleteTask(this)" class="text-red-400 hover:text-red-300">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="flex gap-2 text-xs text-gray-500">
-                    <span>📋 Task</span>
-                    <span>•</span>
-                    <span>Created ${new Date().toLocaleDateString()}</span>
-                </div>
-            `;
-            tasksList.appendChild(taskCard);
-            
-            showNotification(`✅ Task "${taskName}" created`);
-        }
+    function viewProject(name) { window.location.href = `/pages/history.html?search=${encodeURIComponent(name)}`; }
+    function deleteProject(button) { if (confirm("Delete this project? This cannot be undone.")) { button.closest(".panel").remove(); showNotification("Project deleted."); } }
 
-        function toggleTaskComplete(checkbox) {
-            const taskCard = checkbox.closest('.bg-gray-900');
-            if (checkbox.checked) {
-                taskCard.style.opacity = '0.5';
-                taskCard.querySelector('.font-semibold').style.textDecoration = 'line-through';
-                showNotification('✅ Task completed!');
-            } else {
-                taskCard.style.opacity = '1';
-                taskCard.querySelector('.font-semibold').style.textDecoration = 'none';
-            }
-        }
+    function createNewTask() {
+      const taskName = prompt("Enter task name:");
+      if (!taskName) return;
+      const priority = prompt("Priority (High/Medium/Low):", "Medium") || "Medium";
+      const tasksList = document.getElementById("tasksList");
+      const colors = { High: "text-rose-300 bg-rose-500/10", Medium: "text-amber-300 bg-amber-500/10", Low: "text-emerald-300 bg-emerald-500/10" };
+      const taskCard = document.createElement("div");
+      taskCard.className = "panel rounded-3xl p-6";
+      taskCard.innerHTML = `<div class="flex items-center justify-between gap-4"><div><div class="font-semibold">${taskName}</div><div class="mt-2 text-sm text-slate-400">Created ${new Date().toLocaleDateString()}</div></div><div class="flex items-center gap-3"><span class="rounded-full px-3 py-1 text-xs font-semibold ${colors[priority] || colors.Medium}">${priority}</span><button onclick="deleteTask(this)" class="rounded-2xl bg-white/5 px-3 py-2 text-sm font-semibold">Delete</button></div></div>`;
+      tasksList.appendChild(taskCard);
+      showNotification(`Task "${taskName}" created.`);
+    }
 
-        function deleteTask(btn) {
-            if (confirm('Delete this task?')) {
-                btn.closest('.bg-gray-900').remove();
-                const tasksList = document.getElementById('tasksList');
-                if (tasksList.children.length === 0) {
-                    tasksList.innerHTML = '<div class="bg-gray-900 rounded-3xl p-6 text-center text-gray-500">No tasks yet. Click "New Task" to create one.</div>';
-                }
-                showNotification('🗑️ Task deleted');
-            }
-        }
+    function deleteTask(button) { if (confirm("Delete this task?")) { button.closest(".panel").remove(); showNotification("Task deleted."); } }
+    function showNotification(message) { const note = document.createElement("div"); note.className = "fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-full bg-emerald-400 px-6 py-3 text-sm font-semibold text-slate-950"; note.textContent = message; document.body.appendChild(note); setTimeout(() => note.remove(), 2800); }
 
-        function showNotification(message) {
-            const notif = document.createElement('div');
-            notif.className = "fixed bottom-8 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-sm px-8 py-4 rounded-3xl shadow-xl z-50";
-            notif.textContent = message;
-            document.body.appendChild(notif);
-            setTimeout(() => notif.remove(), 3000);
-        }
+    async function loadDashboardData() {
+      try {
+        const response = await fetch("/api/stats");
+        const data = await response.json();
+        document.getElementById("totalTitles").textContent = Number(data.total || 0).toLocaleString();
+        document.getElementById("uniqueTitles").textContent = Number(data.unique || 0).toLocaleString();
+        document.getElementById("duplicateTitles").textContent = Number(data.duplicates || 0).toLocaleString();
+        document.getElementById("activeClusters").textContent = Number(data.clusters || 0).toLocaleString();
+        const totalRecords = Number(data.total || 0);
+        document.getElementById("indexTotalRecords").textContent = totalRecords.toLocaleString();
+        const vectorCount = totalRecords * 384;
+        document.getElementById("indexVectors").textContent = vectorCount > 1000000 ? `~ ${(vectorCount / 1000000).toFixed(1)}M` : vectorCount.toLocaleString();
+        const avgSimilarity = data.total > 0 ? (1 - (Number(data.duplicates || 0) / Number(data.total))).toFixed(3) : "0.000";
+        document.getElementById("indexSimilarity").textContent = avgSimilarity;
+        document.getElementById("reportTotalRecords").textContent = totalRecords.toLocaleString();
+        document.getElementById("reportDuplicates").textContent = Number(data.duplicates || 0).toLocaleString();
+        document.getElementById("reportProjects").textContent = document.querySelectorAll("#projectsList > .panel").length;
+        document.getElementById("reportSimilarity").textContent = avgSimilarity;
+        document.getElementById("uniquePercent").textContent = `${data.total > 0 ? ((Number(data.unique || 0) / Number(data.total || 0)) * 100).toFixed(1) : "0.0"}%`;
+        document.getElementById("duplicatePercent").textContent = `${data.total > 0 ? ((Number(data.duplicates || 0) / Number(data.total || 0)) * 100).toFixed(1) : "0.0"}%`;
+        document.getElementById("avgCluster").textContent = `Average ${Number(data.clusters || 0) > 0 ? (Number(data.duplicates || 0) / Number(data.clusters || 0)).toFixed(1) : "0.0"} records`;
+        document.getElementById("totalChange").textContent = `Updated ${new Date().toLocaleTimeString()}`;
+        document.getElementById("dashboardOverviewSub").textContent = `Overview as of ${new Date().toLocaleDateString()}. Live.`;
 
+        const bulkResponse = await fetch("/admin/stats");
+        const bulkData = await bulkResponse.json();
+        document.getElementById("bulkUploads").textContent = Number(bulkData.total_uploads || 0).toLocaleString();
+        document.getElementById("uploadStatus").textContent = bulkData.total_uploads > 0 ? `${bulkData.total_uploads} files uploaded` : "Ready";
 
-        // Load real-time data
-        async function loadDashboardData() {
-            try {
-                const response = await fetch('/api/stats');
-                const data = await response.json();
-                
-                document.getElementById('totalTitles').textContent = data.total || 0;
-                document.getElementById('uniqueTitles').textContent = data.unique || 0;
-                document.getElementById('duplicateTitles').textContent = data.duplicates || 0;
-                document.getElementById('activeClusters').textContent = data.clusters || 0;
-                
-                // Update Index page stats with formatted values
-                const totalRecords = Number(data.total || 0);
-                document.getElementById('indexTotalRecords').textContent = totalRecords.toLocaleString();
-                
-                const vectorCount = totalRecords * 384; // Typical embedding dimension
-                const vectorDisplay = vectorCount > 1000000 ? `≈ ${(vectorCount / 1000000).toFixed(1)}M` : vectorCount.toLocaleString();
-                document.getElementById('indexVectors').textContent = vectorDisplay;
-                
-                const avgSimilarity = data.total > 0
-                    ? (1 - (Number(data.duplicates || 0) / Number(data.total))).toFixed(3)
-                    : '0.000';
-                document.getElementById('indexSimilarity').textContent = avgSimilarity;
-                
-                // Update Reports page stats
-                document.getElementById('reportTotalRecords').textContent = totalRecords.toLocaleString();
-                document.getElementById('reportDuplicates').textContent = (data.duplicates || 0).toLocaleString();
-                const projectCards = document.querySelectorAll('#projectsList > .bg-gray-900.border');
-                document.getElementById('reportProjects').textContent = projectCards.length;
-                document.getElementById('reportSimilarity').textContent = avgSimilarity;
-                
-                const uniquePercent = data.total > 0 ? ((data.unique / data.total) * 100).toFixed(1) : 0;
-                const duplicatePercent = data.total > 0 ? ((data.duplicates / data.total) * 100).toFixed(1) : 0;
-                
-                document.getElementById('uniquePercent').textContent = uniquePercent + '%';
-                document.getElementById('duplicatePercent').textContent = duplicatePercent + '%';
-                
-                const avgCluster = data.clusters > 0 ? (data.duplicates / data.clusters).toFixed(1) : 0;
-                document.getElementById('avgCluster').textContent = `Avg ${avgCluster} records`;
-                document.getElementById('totalChange').textContent = `Updated ${new Date().toLocaleTimeString()}`;
-                document.getElementById('dashboardOverviewSub').textContent = `Overview as of ${new Date().toLocaleDateString()} • Live`;
-                
-                // Load bulk upload stats
-                const bulkResponse = await fetch('/admin/stats');
-                const bulkData = await bulkResponse.json();
-                document.getElementById('bulkUploads').textContent = bulkData.total_uploads || 0;
-                document.getElementById('uploadStatus').textContent = bulkData.total_uploads > 0 ? `${bulkData.total_uploads} files` : 'Ready';
+        const historyResponse = await fetch("/api/history");
+        const historyData = await historyResponse.json();
+        const rows = (historyData.data || []).slice(0, 5);
+        const tbody = document.getElementById("dashboardHistoryRows");
+        tbody.innerHTML = rows.length === 0 ? `<tr><td colspan="5" class="px-5 py-6 text-sm text-slate-400">No submissions yet.</td></tr>` : rows.map((row) => `<tr class="text-sm text-slate-200"><td class="px-5 py-4">${new Date(row.created_at).toLocaleDateString()}</td><td class="px-5 py-4 font-medium">${row.title || ""}</td><td class="px-5 py-4">1</td><td class="px-5 py-4">${row.status === "duplicate" ? "1" : "0"}</td><td class="px-5 py-4"><span class="rounded-full px-3 py-1 text-xs font-semibold ${row.status === "duplicate" ? "bg-rose-500/10 text-rose-300" : "bg-emerald-500/10 text-emerald-300"}">${row.status === "duplicate" ? "Duplicate" : "Unique"}</span></td></tr>`).join("");
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      }
+    }
 
-                // Populate dashboard history preview table with real recent entries.
-                const historyResponse = await fetch('/api/history');
-                const historyData = await historyResponse.json();
-                const historyRows = (historyData.data || []).slice(0, 5);
-                const tbody = document.getElementById('dashboardHistoryRows');
-                if (tbody) {
-                    if (historyRows.length === 0) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="5" class="py-6 px-8 text-sm text-gray-400">No submissions yet</td>
-                            </tr>
-                        `;
-                    } else {
-                        tbody.innerHTML = historyRows.map((row) => `
-                            <tr>
-                                <td class="py-6 px-8 text-sm">${new Date(row.created_at).toLocaleDateString()}</td>
-                                <td class="py-6 px-8 text-sm font-medium">${row.title || ''}</td>
-                                <td class="py-6 px-8 text-sm">1</td>
-                                <td class="py-6 px-8 text-sm ${row.status === 'duplicate' ? 'text-rose-400' : 'text-emerald-400'}">${row.status === 'duplicate' ? '1' : '0'}</td>
-                                <td class="py-6 px-8">
-                                    <span class="${row.status === 'duplicate' ? 'bg-rose-400/10 text-rose-400' : 'bg-emerald-400/10 text-emerald-400'} px-4 py-1 rounded-full text-xs">
-                                        ${row.status === 'duplicate' ? 'Duplicate' : 'Unique'}
-                                    </span>
-                                </td>
-                            </tr>
-                        `).join('');
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
-            }
-        }
+    function refreshDashboard() { loadDashboardData(); showNotification("Dashboard refreshed."); }
 
-        function refreshDashboard() {
-            loadDashboardData();
-            const notif = document.createElement('div');
-            notif.className = "fixed bottom-8 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-sm px-8 py-4 rounded-3xl shadow-xl flex items-center gap-3";
-            notif.innerHTML = `✅ Dashboard refreshed • Data is live`;
-            document.body.appendChild(notif);
-           
-            setTimeout(() => {
-                notif.style.transition = "all 0.4s";
-                notif.style.opacity = "0";
-                setTimeout(() => notif.remove(), 400);
-            }, 2200);
-        }
-
-        // Check authentication
-        window.onload = () => {
-            const user = JSON.parse(localStorage.getItem('clearoid_user') || 'null');
-            if (!user || !user.loggedIn) {
-                window.location.href = '/pages/signin.html';
-                return;
-            }
-            
-            // Update profile trigger with user initial
-            const profileTrigger = document.getElementById('profileTrigger');
-            if (profileTrigger && user.name) {
-                profileTrigger.textContent = user.name.charAt(0).toUpperCase();
-            }
-            
-            document.querySelector('.sidebar-link').classList.add('bg-white/5');
-            loadDashboardData();
-            setInterval(loadDashboardData, 30000);
-            console.log("%cClearoid Dashboard loaded", "color:#3b82f6; font-family:monospace");
-        };
-    </script>
-    <script src="/assets/js/site-chrome.js"></script>
+    window.onload = () => {
+      const user = JSON.parse(localStorage.getItem("clearoid_user") || "null");
+      if (!user || !user.loggedIn) { window.location.href = "/pages/signin.html"; return; }
+      applyTheme(localStorage.getItem("clearoid_theme") || "dark");
+      if (user.name) document.getElementById("profileTrigger").textContent = user.name.charAt(0).toUpperCase();
+      switchTab(0);
+      switchPage(0);
+      loadDashboardData();
+      setInterval(loadDashboardData, 30000);
+    };
+  </script>
+  <script src="/assets/js/site-chrome.js"></script>
 </body>
 </html>

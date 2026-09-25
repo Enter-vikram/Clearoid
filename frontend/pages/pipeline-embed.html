@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipeline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #1f1f35;
+      --surface-2: #2a2a45;
+      --canvas: #141422;
+      --text: #e8e8f0;
+      --muted: #8b8bb4;
+      --line: rgba(255, 255, 255, 0.08);
+      --node-line: rgba(255, 255, 255, 0.1);
+      --accent: #ff6d5a;
+      --accent-soft: rgba(255, 109, 90, 0.55);
+      --grid: rgba(255, 255, 255, 0.06);
+    }
+
+    body[data-theme="light"] {
+      --bg: #eef4ff;
+      --surface: #ffffff;
+      --surface-2: #edf3ff;
+      --canvas: #f7faff;
+      --text: #14213d;
+      --muted: #62708d;
+      --line: rgba(20, 33, 61, 0.1);
+      --node-line: rgba(20, 33, 61, 0.1);
+      --accent: #2563eb;
+      --accent-soft: rgba(37, 99, 235, 0.5);
+      --grid: rgba(37, 99, 235, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tb,
+    .sb,
+    .side {
+      background: var(--surface);
+    }
+
+    .tb {
+      height: 52px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+    }
+
+    .logo {
+      color: var(--accent);
+      font-weight: 700;
+      padding-right: 12px;
+      border-right: 1px solid var(--line);
+    }
+
+    .name {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .name:focus,
+    .sbox input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .sp {
+      flex: 1;
+    }
+
+    .btn {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .btn.p {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .side {
+      width: 220px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .st,
+    .sec,
+    .sub,
+    .sb {
+      color: var(--muted);
+    }
+
+    .st {
+      padding: 12px 12px 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .sbox {
+      margin: 0 10px 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 8px;
+    }
+
+    .sbox input {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text);
+      outline: none;
+    }
+
+    .list {
+      padding: 6px 10px;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .sec {
+      font-size: 11px;
+      margin: 8px 0;
+    }
+
+    .it {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      cursor: grab;
+    }
+
+    .it:hover {
+      background: var(--surface-2);
+    }
+
+    .ico {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+    }
+
+    .cv {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: var(--canvas);
+    }
+
+    .cv::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--grid) 1px, transparent 1px);
+      background-size: 26px 26px;
+      pointer-events: none;
+    }
+
+    .inner {
+      position: absolute;
+      transform-origin: 0 0;
+      width: 3200px;
+      height: 2400px;
+    }
+
+    .svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .node {
+      position: absolute;
+      width: 200px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--node-line);
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+      cursor: grab;
+    }
+
+    .node.sel {
+      border-color: var(--accent);
+    }
+
+    .h {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--node-line);
+    }
+
+    .nic {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+    }
+
+    .t {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .b {
+      padding: 10px 12px;
+    }
+
+    .f {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .fv {
+      background: var(--surface);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    .port {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--muted);
+      border-radius: 50%;
+      background: var(--surface-2);
+    }
+
+    .in {
+      left: -6px;
+    }
+
+    .out {
+      right: -6px;
+    }
+
+    .sb {
+      height: 28px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 12px;
+      font-size: 11px;
+    }
+
+    .z {
+      margin-left: auto;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 42px;
+      transform: translateX(-50%);
+      background: #50c878;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 999px;
+      opacity: 0;
+      transition: 0.2s;
+    }
+
+    .toast.sh {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="tb">
+    <div class="logo">n8n</div>
+    <input class="name" value="Email Lead Automation">
+    <div class="sp"></div>
+    <button class="btn" onclick="fit()">Fit View</button>
+    <button class="btn" onclick="clr()">Clear</button>
+    <button class="btn p" onclick="run()">Execute</button>
+  </div>
+
+  <div class="main">
+    <div class="side">
+      <div class="st">Nodes</div>
+      <div class="sbox">
+        <input id="q" placeholder="Search nodes...">
+      </div>
+      <div class="list" id="list"></div>
+    </div>
+    <div class="cv" id="cv">
+      <div class="inner" id="in">
+        <svg class="svg" id="svg">
+          <defs>
+            <marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="var(--accent-soft)"></path>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="sb">
+    <div>Nodes: <span id="nc">0</span></div>
+    <div>Connections: <span id="cc">0</span></div>
+    <div class="z">Zoom: <span id="zl">100%</span></div>
+  </div>
+  <div class="toast" id="t"></div>
+
+  <script>
+    const D = {
+      webhook: ["Webhook", "Trigger", "W", "#5b9cf6", [["Path", "/webhook"], ["Method", "POST"]]],
+      schedule: ["Schedule", "Trigger", "S", "#a78bfa", [["Cron", "0 9 * * *"], ["Timezone", "UTC"]]],
+      http: ["HTTP Request", "Action", "H", "#50c878", [["URL", "https://api.example.com"], ["Method", "GET"]]],
+      if: ["IF Condition", "Logic", "I", "#f5c842", [["Field", "status"], ["Equals", "qualified"]]],
+      gmail: ["Gmail", "Action", "G", "#ff6d5a", [["To", "user@email.com"], ["Subject", "New Lead"]]],
+      slack: ["Slack", "Action", "S", "#a78bfa", [["Channel", "#leads"], ["Message", "New sign-up!"]]],
+      sheets: ["Google Sheets", "Action", "G", "#50c878", [["Sheet", "1BxiM..."], ["Range", "A1:D100"]]]
+    };
+
+    const groups = {
+      Triggers: ["webhook", "schedule"],
+      Actions: ["http", "gmail", "slack", "sheets"],
+      Logic: ["if"]
+    };
+
+    let nodes = [];
+    let cons = [];
+    let id = 0;
+    let drag = null;
+    let off = { x: 0, y: 0 };
+    let co = { x: 80, y: 60 };
+    let sc = 1;
+    let pan = false;
+    let p0 = { x: 0, y: 0 };
+    let co0 = { x: 0, y: 0 };
+    let from = null;
+    let pre = null;
+    let pType = null;
+
+    const cv = document.getElementById("cv");
+    const inn = document.getElementById("in");
+    const svg = document.getElementById("svg");
+
+    function applyTheme(theme) {
+      document.body.setAttribute("data-theme", theme === "light" ? "light" : "dark");
+      localStorage.setItem("clearoid_theme", theme === "light" ? "light" : "dark");
+      rc();
+    }
+
+    function currentAccent() {
+      return getComputedStyle(document.body).getPropertyValue("--accent-soft").trim() || "rgba(255, 109, 90, 0.55)";
+    }
+
+    function mkList() {
+      const l = document.getElementById("list");
+      l.innerHTML = "";
+      Object.entries(groups).forEach(([g, a]) => {
+        l.insertAdjacentHTML("beforeend", `<div class="sec">${g}</div>`);
+        a.forEach((k) => {
+          const d = D[k];
+          l.insertAdjacentHTML("beforeend", `<div class="it" draggable="true" data-k="${k}"><div class="ico" style="background:${d[3]}22;color:${d[3]}">${d[2]}</div>${d[0]}</div>`);
+        });
+      });
+      l.querySelectorAll(".it").forEach((e) => {
+        e.ondragstart = () => {
+          pType = e.dataset.k;
+        };
+      });
+    }
+
+    function add(k, p) {
+      const d = D[k];
+      const nid = "n" + (++id);
+      const el = document.createElement("div");
+      nodes.push({ id: nid, k, p: { ...p } });
+      el.className = "node";
+      el.id = nid;
+      el.style.left = p.x + "px";
+      el.style.top = p.y + "px";
+      el.innerHTML = `<div class="port in" data-id="${nid}" data-p="in"></div><div class="h"><div class="nic" style="background:${d[3]}22;color:${d[3]}">${d[2]}</div><div><div class="t">${d[0]}</div><div class="sub">${d[1]}</div></div></div><div class="b">${d[4].map((f) => `<div class="f"><span>${f[0]}</span><span class="fv">${f[1]}</span></div>`).join("")}</div><div class="port out" data-id="${nid}" data-p="out"></div>`;
+      el.onmousedown = md;
+      el.onclick = () => sel(nid);
+      el.querySelectorAll(".port").forEach((pEl) => {
+        pEl.onmousedown = pm;
+      });
+      inn.appendChild(el);
+      stat();
+      return nid;
+    }
+
+    function cpt(nodeId, port) {
+      const e = document.getElementById(nodeId);
+      const x = parseFloat(e.style.left);
+      const y = parseFloat(e.style.top);
+      const w = e.offsetWidth;
+      const h = e.offsetHeight;
+      return port === "out" ? { x: x + w, y: y + h / 2 } : { x, y: y + h / 2 };
+    }
+
+    function rc() {
+      svg.querySelectorAll(".c").forEach((e) => e.remove());
+      cons.forEach((c) => {
+        const a = cpt(c.f, "out");
+        const b = cpt(c.t, "in");
+        const dx = Math.abs(b.x - a.x) * 0.5;
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("d", `M${a.x},${a.y} C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x},${b.y}`);
+        p.setAttribute("stroke", currentAccent());
+        p.setAttribute("stroke-width", "2");
+        p.setAttribute("fill", "none");
+        p.setAttribute("class", "c");
+        p.setAttribute("marker-end", "url(#ar)");
+        svg.appendChild(p);
+      });
+      stat();
+    }
+
+    function cn(f, t) {
+      if (cons.some((c) => c.f === f && c.t === t)) return;
+      cons.push({ f, t });
+      rc();
+    }
+
+    function md(e) {
+      if (e.target.classList.contains("port")) return;
+      drag = e.currentTarget;
+      const r = cv.getBoundingClientRect();
+      off.x = (e.clientX - r.left - co.x) / sc - parseFloat(drag.style.left);
+      off.y = (e.clientY - r.top - co.y) / sc - parseFloat(drag.style.top);
+    }
+
+    function pm(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      const p = e.currentTarget;
+      if (p.dataset.p === "out") {
+        from = p.dataset.id;
+        pre = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pre.setAttribute("stroke", currentAccent());
+        pre.setAttribute("stroke-width", "2");
+        pre.setAttribute("stroke-dasharray", "6 4");
+        pre.setAttribute("fill", "none");
+        svg.appendChild(pre);
+      } else if (from) {
+        cn(from, p.dataset.id);
+        from = null;
+        if (pre) {
+          pre.remove();
+          pre = null;
+        }
+      }
+    }
+
+    function sel(nodeId) {
+      document.querySelectorAll(".node").forEach((n) => n.classList.remove("sel"));
+      document.getElementById(nodeId).classList.add("sel");
+    }
+
+    cv.onmousedown = (e) => {
+      if ([cv, inn, svg].includes(e.target)) {
+        pan = true;
+        p0 = { x: e.clientX, y: e.clientY };
+        co0 = { ...co };
+        document.querySelectorAll(".node").forEach((n) => n.classList.remove("sel"));
+        from = null;
+        if (pre) {
+          pre.remove();
+          pre = null;
+        }
+      }
+    };
+
+    cv.onmousemove = (e) => {
+      const r = cv.getBoundingClientRect();
+      if (drag) {
+        const x = (e.clientX - r.left - co.x) / sc;
+        const y = (e.clientY - r.top - co.y) / sc;
+        drag.style.left = x - off.x + "px";
+        drag.style.top = y - off.y + "px";
+        rc();
+        return;
+      }
+      if (pan) {
+        co.x = co0.x + (e.clientX - p0.x);
+        co.y = co0.y + (e.clientY - p0.y);
+        tr();
+        return;
+      }
+      if (from && pre) {
+        const a = cpt(from, "out");
+        const tx = (e.clientX - r.left - co.x) / sc;
+        const ty = (e.clientY - r.top - co.y) / sc;
+        const dx = Math.abs(tx - a.x) * 0.5;
+        pre.setAttribute("d", `M${a.x},${a.y} C${a.x + dx},${a.y} ${tx - dx},${ty} ${tx},${ty}`);
+      }
+    };
+
+    window.onmouseup = () => {
+      drag = null;
+      pan = false;
+    };
+
+    cv.onwheel = (e) => {
+      e.preventDefault();
+      sc = Math.min(2, Math.max(0.25, sc + (e.deltaY > 0 ? -0.08 : 0.08)));
+      tr();
+    };
+
+    cv.ondragover = (e) => e.preventDefault();
+    cv.ondrop = (e) => {
+      e.preventDefault();
+      if (!pType) return;
+      const r = cv.getBoundingClientRect();
+      const x = (e.clientX - r.left - co.x) / sc;
+      const y = (e.clientY - r.top - co.y) / sc;
+      add(pType, { x, y });
+      pType = null;
+    };
+
+    function tr() {
+      inn.style.transform = `translate(${co.x}px,${co.y}px) scale(${sc})`;
+      document.getElementById("zl").textContent = Math.round(sc * 100) + "%";
+    }
+
+    function stat() {
+      document.getElementById("nc").textContent = nodes.length;
+      document.getElementById("cc").textContent = cons.length;
+    }
+
+    function toast(m) {
+      const t = document.getElementById("t");
+      t.textContent = m;
+      t.classList.add("sh");
+      setTimeout(() => t.classList.remove("sh"), 2200);
+    }
+
+    function fit() {
+      sc = 0.9;
+      co = { x: 80, y: 80 };
+      tr();
+    }
+
+    function clr() {
+      nodes = [];
+      cons = [];
+      inn.querySelectorAll(".node").forEach((e) => e.remove());
+      svg.querySelectorAll(".c").forEach((e) => e.remove());
+      stat();
+    }
+
+    function run() {
+      let d = 0;
+      nodes.forEach((n) => setTimeout(() => document.getElementById(n.id).classList.add("sel"), d += 180));
+      toast("Workflow executed - " + nodes.length + " nodes ran");
+    }
+
+    window.fit = fit;
+    window.clr = clr;
+    window.run = run;
+
+    document.getElementById("q").oninput = (e) => {
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll(".it").forEach((i) => {
+        i.style.display = i.textContent.toLowerCase().includes(q) ? "" : "none";
+      });
+      document.querySelectorAll(".sec").forEach((s) => {
+        s.style.display = q ? "none" : "";
+      });
+    };
+
+    window.addEventListener("message", (event) => {
+      if (event.data && event.data.type === "clearoid-theme") {
+        applyTheme(event.data.theme);
+      }
+    });
+
+    mkList();
+    applyTheme(localStorage.getItem("clearoid_theme") || "dark");
+    tr();
+    add("webhook", { x: 60, y: 160 });
+    add("http", { x: 320, y: 160 });
+    add("if", { x: 580, y: 160 });
+    add("gmail", { x: 840, y: 60 });
+    add("slack", { x: 840, y: 280 });
+    add("sheets", { x: 1100, y: 160 });
+    setTimeout(() => {
+      cn(nodes[0].id, nodes[1].id);
+      cn(nodes[1].id, nodes[2].id);
+      cn(nodes[2].id, nodes[3].id);
+      cn(nodes[2].id, nodes[4].id);
+      cn(nodes[3].id, nodes[5].id);
+      cn(nodes[4].id, nodes[5].id);
+    }, 30);
+  </script>
+</body>
+</html>

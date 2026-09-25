@@ -20,27 +20,22 @@
       { href: "/index.html", label: "Home" },
       { href: "/pages/upload.html", label: "Upload" },
       { href: "/pages/history.html", label: "History" },
-      { href: "/pages/export.html", label: "Export" },
+      { href: "/pages/export.html", label: "Export" }
     ];
+
     if (isLoggedIn) {
       links.splice(1, 0, { href: "/pages/dashboard.html", label: "Dashboard" });
     }
 
-    var html = links
-      .map(function (link) {
-        var active = pathname === link.href ? " text-white" : " text-white hover:text-gray-300";
-        return (
-          '<a href="' + link.href + '" class="' + active + ' transition">' + link.label + "</a>"
-        );
-      })
-      .join("");
+    var html = links.map(function (link) {
+      var active = pathname === link.href ? " text-white" : " text-white/90 hover:text-white";
+      return '<a href="' + link.href + '" class="' + active + ' transition">' + link.label + "</a>";
+    }).join("");
 
     if (isLoggedIn) {
-      html +=
-        '<button id="logoutBtn" class="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition">Logout</button>';
+      html += '<button id="logoutBtn" class="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition">Logout</button>';
     } else if (pathname !== "/pages/signin.html") {
-      html +=
-        '<a href="/pages/signin.html" class="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition">Sign in</a>';
+      html += '<a href="/pages/signin.html" class="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition">Sign in</a>';
     }
 
     return html;
@@ -65,43 +60,68 @@
   }
 
   function footerHtml() {
+    var isDark = document.body.getAttribute("data-theme") !== "light";
+    var headingClass = isDark ? "text-white" : "text-slate-900";
+    var hoverClass = isDark ? "hover:text-white" : "hover:text-slate-900";
+    var borderClass = isDark ? "border-gray-800" : "border-slate-200";
+    
     return (
       '<div class="max-w-7xl mx-auto px-6 lg:px-8">' +
-      '<div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">' +
+      '<div class="grid grid-cols-1 gap-10 mb-10 md:grid-cols-3">' +
       "<div>" +
-      '<h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">PRODUCT</h3>' +
-      '<ul class="space-y-3 text-base">' +
-      '<li><a href="/index.html" class="hover:text-white transition">Home</a></li>' +
-      '<li><a href="/pages/dashboard.html" class="hover:text-white transition">Dashboard</a></li>' +
-      '<li><a href="/pages/upload.html" class="hover:text-white transition">Upload</a></li>' +
-      '<li><a href="/pages/history.html" class="hover:text-white transition">History</a></li>' +
-      '<li><a href="/pages/export.html" class="hover:text-white transition">Export</a></li>' +
+      '<h3 class="' + headingClass + ' font-bold text-lg tracking-wider mb-6 uppercase">Product</h3>' +
+      '<ul class="space-y-4 text-base">' +
+      '<li><a href="/index.html" class="' + hoverClass + ' transition">Home</a></li>' +
+      '<li><a href="/pages/dashboard.html" class="' + hoverClass + ' transition">Dashboard</a></li>' +
+      '<li><a href="/pages/upload.html" class="' + hoverClass + ' transition">Upload</a></li>' +
+      '<li><a href="/pages/history.html" class="' + hoverClass + ' transition">History</a></li>' +
+      '<li><a href="/pages/export.html" class="' + hoverClass + ' transition">Export</a></li>' +
       "</ul>" +
       "</div>" +
       "<div>" +
-      '<h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">COMPANY</h3>' +
-      '<ul class="space-y-3 text-base">' +
-      '<li><a href="/pages/about.html" class="hover:text-white transition">About Clearoid</a></li>' +
-      '<li><a href="/pages/contact.html" class="hover:text-white transition">Contact Us</a></li>' +
-      '<li><a href="/pages/feedback.html" class="hover:text-white transition">Feedback</a></li>' +
-      '<li><a href="/pages/privacy.html" class="hover:text-white transition">Privacy Policy</a></li>' +
-      '<li><a href="/pages/terms.html" class="hover:text-white transition">Terms of Service</a></li>' +
+      '<h3 class="' + headingClass + ' font-bold text-lg tracking-wider mb-6 uppercase">Company</h3>' +
+      '<ul class="space-y-4 text-base">' +
+      '<li><a href="/pages/about.html" class="' + hoverClass + ' transition">About Clearoid</a></li>' +
+      '<li><a href="/pages/contact.html" class="' + hoverClass + ' transition">Contact Us</a></li>' +
+      '<li><a href="/pages/feedback.html" class="' + hoverClass + ' transition">Feedback</a></li>' +
+      '<li><a href="/pages/privacy.html" class="' + hoverClass + ' transition">Privacy Policy</a></li>' +
+      '<li><a href="/pages/terms.html" class="' + hoverClass + ' transition">Terms of Service</a></li>' +
       "</ul>" +
       "</div>" +
       "<div>" +
-      '<h3 class="text-white font-bold text-lg tracking-wider mb-5 uppercase">SOCIAL</h3>' +
-      '<ul class="space-y-3 text-base">' +
-      '<li><a href="https://github.com/yourusername/clearoid" target="_blank" class="hover:text-white transition">GitHub</a></li>' +
-      '<li><a href="https://linkedin.com/in/yourprofile" target="_blank" class="hover:text-white transition">LinkedIn</a></li>' +
-      '<li><a href="https://x.com/yourusername" target="_blank" class="hover:text-white transition">X</a></li>' +
-      '<li><a href="mailto:clearoid.ai@gmail.com" class="hover:text-white transition">Email</a></li>' +
-      '<li><a href="https://clearoid.vercel.app" target="_blank" class="hover:text-white transition">Share</a></li>' +
+      '<h3 class="' + headingClass + ' font-bold text-lg tracking-wider mb-6 uppercase">Social</h3>' +
+      '<ul class="space-y-4 text-base">' +
+      '<li><a href="https://github.com/yourusername/clearoid" target="_blank" rel="noreferrer" class="' + hoverClass + ' transition">GitHub</a></li>' +
+      '<li><a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noreferrer" class="' + hoverClass + ' transition">LinkedIn</a></li>' +
+      '<li><a href="https://x.com/yourusername" target="_blank" rel="noreferrer" class="' + hoverClass + ' transition">X</a></li>' +
+      '<li><a href="mailto:clearoid.ai@gmail.com" class="' + hoverClass + ' transition">Email</a></li>' +
+      '<li><a href="https://clearoid.vercel.app" target="_blank" rel="noreferrer" class="' + hoverClass + ' transition">Share</a></li>' +
       "</ul>" +
       "</div>" +
       "</div>" +
-      '<div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center text-sm gap-6">' +
-      "<p>© 2026 Clearoid</p>" +
+      '<div class="' + borderClass + ' border-t pt-6 flex flex-col md:flex-row justify-between items-center text-sm gap-6">' +
+      "<p>&copy; 2026 Clearoid</p>" +
       "<p>Version 1.0</p>" +
+      "</div>" +
+      "</div>"
+    );
+  }
+
+  function appFooterHtml() {
+    var isDark = document.body.getAttribute("data-theme") !== "light";
+    var hoverClass = isDark ? "hover:text-white" : "hover:text-slate-900";
+    
+    return (
+      '<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">' +
+      '<div class="flex flex-wrap items-center gap-4 text-sm">' +
+      '<a href="/index.html" class="transition ' + hoverClass + '">Home</a>' +
+      '<a href="/pages/history.html" class="transition ' + hoverClass + '">History</a>' +
+      '<a href="/pages/export.html" class="transition ' + hoverClass + '">Export</a>' +
+      '<a href="/pages/help.html" class="transition ' + hoverClass + '">Help</a>' +
+      "</div>" +
+      '<div class="flex flex-wrap items-center gap-4 text-sm">' +
+      "<span>&copy; 2026 Clearoid</span>" +
+      "<span>Version 1.0</span>" +
       "</div>" +
       "</div>"
     );
@@ -111,7 +131,10 @@
     if (isAuthPage()) return;
     var footer = document.querySelector("footer");
     if (!footer) return;
-    footer.className = "bg-black text-gray-400 pt-12 pb-10";
+    var isDark = document.body.getAttribute("data-theme") !== "light";
+    var bgClass = isDark ? "bg-black" : "bg-white";
+    var textClass = isDark ? "text-gray-400" : "text-slate-700";
+    footer.className = bgClass + " " + textClass + " pt-12 pb-10";
     footer.innerHTML = footerHtml();
   }
 
@@ -119,4 +142,7 @@
     renderNav();
     renderFooter();
   });
+  
+  // Expose renderFooter globally for theme switching
+  window.renderFooter = renderFooter;
 })();
